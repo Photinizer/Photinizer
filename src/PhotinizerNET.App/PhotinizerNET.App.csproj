@@ -1,0 +1,59 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Backend\" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<EmbeddedResource Include="Frontend\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="frontend\components\common\greetings.js" />
+    <None Remove="frontend\components\common\Label.js" />
+    <None Remove="frontend\components\common\section.js" />
+    <None Remove="frontend\components\users\enums.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PhotinizerNET.Lib\PhotinizerNET.Lib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Frontend\wwwroot\css\styles.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Frontend\wwwroot\photinizer.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Frontend\wwwroot\index.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+	
+  <Target Name="PreparationStep" AfterTargets="Build">
+    <PropertyGroup>
+      <!-- Формируем команду: dotnet "путь/к/файлу.dll" -\-аргументы -->
+      <PrepCommand>dotnet "$(TargetPath)" --build-source "$(ProjectDir)"</PrepCommand>
+    </PropertyGroup>
+
+	<Message Text="Dotnet: $(DotNetExecutable)" Importance="high" />
+	<Message Text="Running photinization: $(PrepCommand)" Importance="high" />
+    
+    <!-- Exec запустит процесс и дождется его завершения -->
+    <Exec Command="$(PrepCommand)" StandardOutputImportance="high" />
+  </Target>
+
+</Project>
