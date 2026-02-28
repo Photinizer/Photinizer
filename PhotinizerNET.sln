@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34607.119
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotinizerNET.Lib", "src\PhotinizerNET.Lib\PhotinizerNET.Lib.csproj", "{89024E7A-DC18-4070-8BE2-C7C9C4A1A6E5}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotinizerNET.App", "src\PhotinizerNET.App\PhotinizerNET.App.csproj", "{40DAD816-954D-4F44-8ED3-08034B91E467}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PhotinizerNET.Lib", "src\PhotinizerNET.Lib\PhotinizerNET.Lib.csproj", "{89024E7A-DC18-4070-8BE2-C7C9C4A1A6E5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

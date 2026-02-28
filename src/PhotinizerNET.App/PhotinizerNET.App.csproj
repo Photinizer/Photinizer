@@ -43,17 +43,16 @@
     </None>
   </ItemGroup>
 	
-  <Target Name="PreparationStep" AfterTargets="Build">
+  <Target Name="PreparationStep"
+          AfterTargets="Build"
+          Condition="'$(IsCrossTargetingBuild)' != 'true'">
     <PropertyGroup>
-      <!-- Формируем команду: dotnet "путь/к/файлу.dll" -\-аргументы -->
-      <PrepCommand>dotnet "$(TargetPath)" --build-source "$(ProjectDir)"</PrepCommand>
+      <PrepCommand>dotnet "$(TargetPath)" --build-source "$(MSBuildProjectDirectory)"</PrepCommand>
     </PropertyGroup>
 
-	<Message Text="Dotnet: $(DotNetExecutable)" Importance="high" />
-	<Message Text="Running photinization: $(PrepCommand)" Importance="high" />
-    
-    <!-- Exec запустит процесс и дождется его завершения -->
-    <Exec Command="$(PrepCommand)" StandardOutputImportance="high" />
+    <Message Text="Running photinization: $(PrepCommand)" Importance="high" />
+    <Exec Command="$(PrepCommand)"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          StandardOutputImportance="high" />
   </Target>
-
 </Project>

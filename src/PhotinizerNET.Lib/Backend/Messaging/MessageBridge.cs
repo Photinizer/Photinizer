@@ -1,15 +1,13 @@
-﻿using Photino.NET;
+﻿using PhotinizerNET.Lib.Backend.Messaging;
+using Photino.NET;
 using System.Text.Json;
 
 namespace PhotinizerNET.Backend.Messaging;
 
 public class MessageBridge
 {
-    public static Guid NO_ANSWER = Guid.NewGuid();
-    public static Guid OK_200 = Guid.NewGuid();
-
     private readonly PhotinoWindow _window;
-    private readonly Dictionary<string, Func<JsonElement, Task<object>>> _handlers = [];
+    private readonly Dictionary<string, RequestHandler> _handlers = [];
 
     public MessageBridge(PhotinoWindow window)
     {
@@ -18,16 +16,18 @@ public class MessageBridge
     }
 
     public MessageBridge OnMessageAsync(string command, Func<JsonElement, Task> handler)
-        => OnThis(() => _handlers[command] = async el => { await handler(el); return NO_ANSWER; });
+        => AddHandler(command, new(handler, NeedResponse: false));
 
     public MessageBridge OnTaskAsync(string command, Func<JsonElement, Task> handler)
-        => OnThis(() => _handlers[command] = async el => { await handler(el); return OK_200; });
+        => AddHandler(command, new(handler, NeedResponse: true));
 
     public MessageBridge OnQueryAsync(string command, Func<JsonElement, Task<object>> handler)
-        => OnThis(() => _handlers[command] = handler);
+        => AddHandler(command, new(handler, NeedResponse: true));
 
-#pragma warning disable CS1998 // В асинхронном методе отсутствуют операторы await, будет выполнен синхронный метод
+
     public MessageBridge OnMessage(string command, Action<JsonElement> handler)
+
+#pragma warning disable CS1998
         => OnMessageAsync(command, async el => handler(el));
 
     public MessageBridge OnTask(string command, Action<JsonElement> handler)
@@ -35,22 +35,14 @@ public class MessageBridge
 
     public MessageBridge OnQuery(string command, Func<JsonElement, object> handler)
         => OnQueryAsync(command, async el => handler(el));
+#pragma warning restore CS1998
 
-#pragma warning restore CS1998 // В асинхронном методе отсутствуют операторы await, будет выполнен синхронный метод
+    public static StatusCode NoAnswer() => StatusCode.NO_ANSWER;
+    public static StatusCode Ok() => StatusCode.OK;
 
-    // TODO: think about it
-    public void Call(string eventName, object data)
+    private MessageBridge AddHandler(string command, RequestHandler handler)
     {
-        var json = JsonSerializer.Serialize(new { @event = eventName, data });
-        _window.SendWebMessage(json);
-    }
-
-    public static Guid NoAnswer() => NO_ANSWER;
-    public static Guid Ok() => OK_200;
-
-    private MessageBridge OnThis(Action action)
-    {
-        action();
+        _handlers[command] = handler;
         return this;
     }
 
@@ -66,8 +58,8 @@ public class MessageBridge
 
             if (_handlers.TryGetValue(command, out var handler))
             {
-                var result = await handler(args);
-                if (!result.Equals(NO_ANSWER))
+                var result = await handler.HandleFunc(args);
+                if (handler.NeedResponse)
                 {
                     var json = JsonSerializer.Serialize(new { requestId = reqId, data = result });
                     _window.SendWebMessage(json);
