@@ -1,22 +1,21 @@
-﻿using PhotinizerNET.Backend.Settings;
-using System.Reflection;
+﻿using PhotinizerNET.Core.Settings;
 using System.Text.RegularExpressions;
 
-namespace PhotinizerNET.Backend;
+namespace PhotinizerNET.UI.Own;
 
-internal class PhotinizerBuilder(PhotinizerSettings settings, PhotinizerBuildSettings buildSettings)
+internal class PhotinizerOwnUI(string pathToComponents) : IPhotinizerUI
 {
-    public void Build()
+    public void Build(PhotinizerSettings settings, PhotinizerBuildSettings buildSettings)
     {
         Console.WriteLine("Photinizer: Build started...");
 
-        BuildTemplates();
-        CreateBundleFile();
+        BuildTemplates(settings, buildSettings);
+        CreateBundleFile(buildSettings);
 
         Console.WriteLine("Photinizer: Build done.");
     }
 
-    private void BuildTemplates()
+    private void BuildTemplates(PhotinizerSettings settings, PhotinizerBuildSettings buildSettings)
     {
         Console.WriteLine("build templates: started");
 
@@ -25,19 +24,19 @@ internal class PhotinizerBuilder(PhotinizerSettings settings, PhotinizerBuildSet
             { "TITLE", settings.Title },
             { "ROOT_COMPONENT", settings.UI.RootComponent },
         };
-        BuildTemplate("index.html", replacements);
+        BuildTemplate("index.html", replacements, settings, buildSettings);
 
         Console.WriteLine("build templates: done");
     }
 
-    private void CreateBundleFile()
+    private void CreateBundleFile(PhotinizerBuildSettings buildSettings)
     {
         Console.WriteLine("build bundle file: started");
 
-        var rootPath = Path.Combine(buildSettings.BuildSource, "Frontend");
+        var componentsPath = Path.Combine(buildSettings.BuildSource, pathToComponents);
 
-        var commonComponentsPath = Path.Combine(rootPath, "components", "common");
-        var userComponentsPath = Path.Combine(rootPath, "components", "users");
+        var commonComponentsPath = Path.Combine(componentsPath, "common");
+        var userComponentsPath = Path.Combine(componentsPath, "users");
 
         var componentFiles = Directory.GetFiles(commonComponentsPath, "*.js", SearchOption.AllDirectories)
                       .Concat(Directory.GetFiles(userComponentsPath, "*.js", SearchOption.AllDirectories)).ToArray();
@@ -49,7 +48,7 @@ internal class PhotinizerBuilder(PhotinizerSettings settings, PhotinizerBuildSet
             var content = File.ReadAllText(componentFile);
             components.Add(new(componentFile, content, GetLinks(componentFile, content)));
         }
-        components = SortComponents(components);
+        components = ComponentDependencyResolver.OrderComponents(components);
 
         Console.WriteLine("Components found:");
         foreach (var component in components)
@@ -65,41 +64,6 @@ internal class PhotinizerBuilder(PhotinizerSettings settings, PhotinizerBuildSet
         Console.WriteLine("build bundle file: done");
     }
 
-    private record Component(string FilePath, string Content, List<string> Dependencies);
-
-    private List<Component> SortComponents(IEnumerable<Component> components)
-    {
-        var sorted = new List<Component>();
-        var visited = new HashSet<string>();
-        var visiting = new HashSet<string>(); // Для поиска циклов
-
-        var componentsDict = components.ToDictionary(m => m.FilePath);
-
-        void Visit(Component component)
-        {
-            if (visited.Contains(component.FilePath)) return;
-            if (visiting.Contains(component.FilePath))
-                throw new Exception($"Обнаружена циклическая зависимость: {component.FilePath}");
-
-            visiting.Add(component.FilePath);
-
-            foreach (var depName in component.Dependencies)
-            {
-                if (componentsDict.TryGetValue(depName, out var depComponent))
-                    Visit(depComponent);
-            }
-
-            visiting.Remove(component.FilePath);
-            visited.Add(component.FilePath);
-            sorted.Add(component);
-        }
-
-        foreach (var component in components)
-            Visit(component);
-
-        return sorted;
-    }
-
     private List<string> GetLinks(string filePath, string content)
     {
         var regex = new Regex(@"//\s*using\s+(?<dep>\S+?)(\.js|\s|$)", RegexOptions.Compiled);
@@ -108,14 +72,14 @@ internal class PhotinizerBuilder(PhotinizerSettings settings, PhotinizerBuildSet
         return regex.Matches(content).Select(x => Path.Combine(root, $"{x.Groups["dep"]}.js")).ToList();
     }
 
-    void BuildTemplate(string path, Dictionary<string, string> replacements)
+    void BuildTemplate(string path, Dictionary<string, string> replacements, PhotinizerSettings settings, PhotinizerBuildSettings buildSettings)
     {
         var subPath = Path.Combine("Frontend", "wwwroot", path);
         var sourcePath = Path.Combine(buildSettings.BuildSource, subPath);
         var targetPath = Path.Combine(AppContext.BaseDirectory, subPath);
 
         var content = File.ReadAllText(sourcePath);
-        
+
         foreach (var x in replacements)
             content = content.Replace($"[[{x.Key.ToUpper()}]]", x.Value);
         content = content

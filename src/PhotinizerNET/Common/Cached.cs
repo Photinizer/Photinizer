@@ -1,5 +1,4 @@
-﻿
-namespace PhotinizerNET.Backend.Common;
+﻿namespace PhotinizerNET.Common;
 
 internal class Cached<T>(Func<T> getFunc)
 {

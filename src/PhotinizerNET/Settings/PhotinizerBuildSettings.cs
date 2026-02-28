@@ -1,8 +1,8 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace PhotinizerNET.Backend.Settings;
+namespace PhotinizerNET.Core.Settings;
 
-internal class PhotinizerBuildSettings
+public class PhotinizerBuildSettings
 {
     private string _args;
 

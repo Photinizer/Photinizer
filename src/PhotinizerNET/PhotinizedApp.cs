@@ -1,8 +1,8 @@
-﻿using PhotinizerNET.Backend.Messaging;
-using PhotinizerNET.Backend.Settings;
+﻿using PhotinizerNET.Core.Settings;
+using PhotinizerNET.Messaging;
 using Photino.NET;
 
-namespace PhotinizerNET.Backend;
+namespace PhotinizerNET;
 
 public class PhotinizedApp(PhotinizerSettings settings)
 {

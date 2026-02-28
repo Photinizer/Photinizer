@@ -1,4 +1,4 @@
-﻿namespace PhotinizerNET.Lib.Backend.Messaging;
+﻿namespace PhotinizerNET.Messaging;
 
 // Thanks to Ivan (GitHub: https://github.com/ivanvoyager )
 public readonly record struct StatusCode(int Code)

@@ -1,10 +1,15 @@
-﻿namespace PhotinizerNET;
+﻿using PhotinizerNET.UI.Own;
+//using PhotinizerNET.UI.Vue; //requires project reference to PhotinizerNET.UI.Vue project
+
+namespace PhotinizerNET.App;
 
 static class Program
 {
     [STAThread]
     static void Main(string[] args)
-        => new Photinizer().Run(setup: o =>
+        => new Photinizer()
+        .AddOwnUI(Path.Combine("Frontend","components"))/*or AddVueJs() */
+        .Run(setup: o =>
         {
             // for example
             o.Window.SetDevToolsEnabled(true);

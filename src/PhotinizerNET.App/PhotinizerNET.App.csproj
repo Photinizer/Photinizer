@@ -2,16 +2,16 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
-    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Backend\" />
+	<EmbeddedResource Include="Frontend\**" />
   </ItemGroup>
 
   <ItemGroup>
-	<EmbeddedResource Include="Frontend\**" />
+    <Compile Remove="Backend\**" />
+    <EmbeddedResource Remove="Backend\**" />
+    <None Remove="Backend\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,7 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PhotinizerNET.Lib\PhotinizerNET.Lib.csproj" />
+    <ProjectReference Include="..\..\PhotinizerNET.UI.Own\PhotinizerNET.UI.Own.csproj" />
+    <ProjectReference Include="..\PhotinizerNET\PhotinizerNET.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,16 +44,12 @@
     </None>
   </ItemGroup>
 	
-  <Target Name="PreparationStep"
-          AfterTargets="Build"
-          Condition="'$(IsCrossTargetingBuild)' != 'true'">
+  <Target Name="PreparationStep" AfterTargets="Build" Condition="'$(IsCrossTargetingBuild)' != 'true'">
     <PropertyGroup>
       <PrepCommand>dotnet "$(TargetPath)" --build-source "$(MSBuildProjectDirectory)"</PrepCommand>
     </PropertyGroup>
 
     <Message Text="Running photinization: $(PrepCommand)" Importance="high" />
-    <Exec Command="$(PrepCommand)"
-          WorkingDirectory="$(MSBuildProjectDirectory)"
-          StandardOutputImportance="high" />
+    <Exec Command="$(PrepCommand)" WorkingDirectory="$(MSBuildProjectDirectory)" StandardOutputImportance="high" />
   </Target>
 </Project>

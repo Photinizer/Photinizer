@@ -1,4 +1,8 @@
 <Solution>
   <Project Path="src/PhotinizerNET.App/PhotinizerNET.App.csproj" />
-  <Project Path="src/PhotinizerNET.Lib/PhotinizerNET.Lib.csproj" />
+  <Folder Name="/UI/">
+    <Project Path="PhotinizerNET.UI.Own/PhotinizerNET.UI.Own.csproj" Id="b0ff3fe5-52a8-42d4-92ed-ebf5ad5cf76d" />
+    <Project Path="PhotinizerNET.UI.VueJS/PhotinizerNET.UI.VueJS.csproj" Id="b56ceccc-63a1-4418-a4ed-eed4e6046fed" />
+  </Folder>
+  <Project Path="src/PhotinizerNET/PhotinizerNET.csproj" />
 </Solution>

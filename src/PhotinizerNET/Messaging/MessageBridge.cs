@@ -1,8 +1,7 @@
-﻿using PhotinizerNET.Lib.Backend.Messaging;
-using Photino.NET;
+﻿using Photino.NET;
 using System.Text.Json;
 
-namespace PhotinizerNET.Backend.Messaging;
+namespace PhotinizerNET.Messaging;
 
 public class MessageBridge
 {
@@ -26,16 +25,19 @@ public class MessageBridge
 
 
     public MessageBridge OnMessage(string command, Action<JsonElement> handler)
-
-#pragma warning disable CS1998
-        => OnMessageAsync(command, async el => handler(el));
+        => OnMessageAsync(command, el => {
+            handler(el);
+            return Task.CompletedTask;
+        });
 
     public MessageBridge OnTask(string command, Action<JsonElement> handler)
-        => OnTaskAsync(command, async el => handler(el));
+        => OnTaskAsync(command, el => {
+            handler(el);
+            return Task.CompletedTask;
+        });
 
     public MessageBridge OnQuery(string command, Func<JsonElement, object> handler)
-        => OnQueryAsync(command, async el => handler(el));
-#pragma warning restore CS1998
+        => OnQueryAsync(command, el => Task.FromResult(handler(el)));
 
     public static StatusCode NoAnswer() => StatusCode.NO_ANSWER;
     public static StatusCode Ok() => StatusCode.OK;
