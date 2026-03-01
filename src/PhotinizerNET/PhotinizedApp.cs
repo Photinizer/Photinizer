@@ -6,11 +6,8 @@ namespace PhotinizerNET;
 
 public class PhotinizedApp(PhotinizerSettings settings)
 {
-    private PhotinoWindow _window;
-    public MessageBridge _messageBridge;
-
-    public PhotinoWindow Window => _window ??= CreateWindow();
-    public MessageBridge MessageBridge => _messageBridge ??= new(Window);
+    public PhotinoWindow Window => field ??= CreateWindow();
+    public Messenger Messenger => field ??= new(Window);
 
     private PhotinoWindow CreateWindow()
     {

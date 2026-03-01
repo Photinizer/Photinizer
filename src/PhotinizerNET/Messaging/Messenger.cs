@@ -3,47 +3,47 @@ using System.Text.Json;
 
 namespace PhotinizerNET.Messaging;
 
-public class MessageBridge
+public class Messenger
 {
     private readonly PhotinoWindow _window;
     private readonly Dictionary<string, RequestHandler> _handlers = [];
     private readonly Dictionary<string, TaskCompletionSource<JsonElement>> _pendingRequests = [];
 
-    public MessageBridge(PhotinoWindow window)
+    public Messenger(PhotinoWindow window)
     {
         _window = window;
         _window.RegisterWebMessageReceivedHandler(OnMessageReceived);
     }
 
-    public MessageBridge OnMessageAsync(string endpoint, Func<JsonElement, Task> handler)
+    public Messenger OnMessageAsync(string endpoint, Func<JsonElement, Task> handler)
         => AddHandler(endpoint, new(handler, NeedResponse: false));
 
-    public MessageBridge OnTaskAsync(string endpoint, Func<JsonElement, Task> handler)
+    public Messenger OnTaskAsync(string endpoint, Func<JsonElement, Task> handler)
         => AddHandler(endpoint, new(handler, NeedResponse: true));
 
-    public MessageBridge OnQueryAsync(string endpoint, Func<JsonElement, Task<object>> handler)
+    public Messenger OnQueryAsync(string endpoint, Func<JsonElement, Task<object>> handler)
         => AddHandler(endpoint, new(handler, NeedResponse: true));
 
 
-    public MessageBridge OnMessage(string endpoint, Action<JsonElement> handler)
+    public Messenger OnMessage(string endpoint, Action<JsonElement> handler)
         => OnMessageAsync(endpoint, el => {
             handler(el);
             return Task.CompletedTask;
         });
 
-    public MessageBridge OnTask(string endpoint, Action<JsonElement> handler)
+    public Messenger OnTask(string endpoint, Action<JsonElement> handler)
         => OnTaskAsync(endpoint, el => {
             handler(el);
             return Task.CompletedTask;
         });
 
-    public MessageBridge OnQuery(string endpoint, Func<JsonElement, object> handler)
+    public Messenger OnQuery(string endpoint, Func<JsonElement, object> handler)
         => OnQueryAsync(endpoint, el => Task.FromResult(handler(el)));
 
     public static StatusCode NoAnswer() => StatusCode.NO_ANSWER;
     public static StatusCode Ok() => StatusCode.OK;
 
-    private MessageBridge AddHandler(string endpoint, RequestHandler handler)
+    private Messenger AddHandler(string endpoint, RequestHandler handler)
     {
         _handlers[endpoint] = handler;
         return this;
