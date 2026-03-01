@@ -61,7 +61,7 @@ public class MessageBridge
 
             if (_handlers.TryGetValue(endpoint, out var handler))
             {
-                var result = await handler.HandleFunc(data);
+                var result = await handler.HandleFunc(data).ConfigureAwait(false);
                 if (handler.NeedResponse)
                 {
                     var json = JsonSerializer.Serialize(new { requestId = reqId, data = result });
