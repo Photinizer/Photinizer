@@ -67,7 +67,7 @@ internal class PhotinizerOwnUI(string pathToComponents) : IPhotinizerUI
     private List<string> GetLinks(string filePath, string content)
     {
         var regex = new Regex(@"//\s*using\s+(?<dep>\S+?)(\.js|\s|$)", RegexOptions.Compiled);
-        var root = Path.GetDirectoryName(filePath);
+        var root = Path.GetDirectoryName(filePath) ?? string.Empty;
 
         return regex.Matches(content).Select(x => Path.Combine(root, $"{x.Groups["dep"]}.js")).ToList();
     }

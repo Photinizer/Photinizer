@@ -49,14 +49,18 @@ public class Messenger
         return this;
     }
 
-    private async void OnMessageReceived(object sender, string message)
+    private async void OnMessageReceived(object? sender, string message)
     {
-        string reqId = null;
+        string? requestId = null;
         try
         {
             var doc = JsonDocument.Parse(message);
-            reqId = doc.RootElement.GetProperty("requestId").GetString();
+            requestId = doc.RootElement.GetProperty("requestId").GetString();
+            if (string.IsNullOrEmpty(requestId)) return;
+
             var endpoint = doc.RootElement.GetProperty("endpoint").GetString();
+            if (endpoint == null) return;
+
             doc.RootElement.TryGetProperty("data", out var data);
 
             if (_handlers.TryGetValue(endpoint, out var handler))
@@ -64,19 +68,22 @@ public class Messenger
                 var result = await handler.HandleFunc(data).ConfigureAwait(false);
                 if (handler.NeedResponse)
                 {
-                    var json = JsonSerializer.Serialize(new { requestId = reqId, data = result });
+                    var json = JsonSerializer.Serialize(new { requestId = requestId, data = result });
                     _window.SendWebMessage(json);
                 }
             }
-            else if (_pendingRequests.TryGetValue(reqId, out var task)) {
-                _pendingRequests.Remove(reqId);
+            else if (_pendingRequests.TryGetValue(requestId, out var task))
+            {
+                _pendingRequests.Remove(requestId);
                 task.SetResult(data);
             }
         }
         catch (Exception ex)
         {
-            if (reqId != null)
-                _window.SendWebMessage(JsonSerializer.Serialize(new { requestId = reqId, error = ex.Message }));
+            if (!string.IsNullOrEmpty(requestId))
+            {
+                _window.SendWebMessage(JsonSerializer.Serialize(new { requestId = requestId, error = ex.Message }));
+            }
         }
     }
 

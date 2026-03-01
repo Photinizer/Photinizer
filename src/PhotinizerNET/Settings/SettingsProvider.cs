@@ -1,14 +1,13 @@
-﻿using PhotinizerNET.Common;
-using System.Text.Json;
-using Options = System.Text.Json.JsonSerializerOptions;
+﻿using System.Text.Json;
 
 namespace PhotinizerNET.Core.Settings;
 
 internal static class SettingsProvider
 {
-    private static Cached<PhotinizerSettings> _settings = new(LoadFromAppsettingsOrDefault);
+    private static readonly Lazy<PhotinizerSettings> s_settings = new(LoadFromAppsettingsOrDefault);
+    private static readonly JsonSerializerOptions s_readOptions = new() { PropertyNameCaseInsensitive = true };
 
-    public static PhotinizerSettings Get() => _settings.Get();
+    public static PhotinizerSettings Get() => s_settings.Value;
 
     private static PhotinizerSettings LoadFromAppsettingsOrDefault()
     {
@@ -19,8 +18,13 @@ internal static class SettingsProvider
             using var doc = JsonDocument.Parse(data);
 
             if (doc.RootElement.TryGetProperty("Photinizer", out var section))
-                return section.Deserialize<PhotinizerSettings>(new Options { PropertyNameCaseInsensitive = true });
+            {
+                return section.Deserialize<PhotinizerSettings>(s_readOptions) ?? Fallback();
+            }
         }
-        return new(new(), new());
+
+        return Fallback();
+
+        static PhotinizerSettings Fallback() => new(new WindowSettings(), new UISettings());
     }
 }

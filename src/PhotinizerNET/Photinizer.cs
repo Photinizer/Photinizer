@@ -5,11 +5,11 @@ namespace PhotinizerNET;
 
 public class Photinizer
 {
-    private IPhotinizerUI _ui;
+    private IPhotinizerUI? _ui;
 
     public void SetUI(IPhotinizerUI ui) => _ui = ui;
 
-    public void Run(Action<PhotinizedApp> setup = null)
+    public void Run(Action<PhotinizedApp>? setup = null)
     {
         var settings = SettingsProvider.Get();
         var buildSettings = new PhotinizerBuildSettings();

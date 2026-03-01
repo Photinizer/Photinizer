@@ -7,7 +7,6 @@ public class PhotinizerBuildSettings
     private string _args;
 
     private const string _buildSouceArg = "--build-source";
-    private string _buildSource;
 
     public PhotinizerBuildSettings()
     {
@@ -17,7 +16,7 @@ public class PhotinizerBuildSettings
 
     public bool IsBuildMode { get; private set; }
 
-    public string BuildSource => _buildSource ??= GetBuildSource();
+    public string BuildSource => field ??= GetBuildSource();
 
     private string GetBuildSource()
         => Regex.Match(_args, "--build-source=\"(.+?)\"").Groups[1].Value;
