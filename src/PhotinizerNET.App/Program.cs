@@ -16,8 +16,17 @@ static class Program
 
             o.MessageBridge
                 .OnQuery("Hello, backend!", _ => "Hello, frontend!")
-                .OnMessage("save username", data => File.WriteAllText("data.dat", data.GetProperty("username").ToString()))
-                .OnMessage("delete username", _ => File.Delete("data.dat"))
+                .OnTask("save username", data => File.WriteAllText("data.dat", data.GetProperty("username").ToString()))
+                .OnTask("delete username", _ => File.Delete("data.dat"))
                 .OnQuery("get username", _ => File.Exists("data.dat") ? File.ReadAllText("data.dat") : "dear friend");
+
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    await Task.Delay(1000);
+                    await o.MessageBridge.SendTask("update timer", DateTime.Now.ToString("HH:mm:ss"));
+                }
+            });
         });
 }

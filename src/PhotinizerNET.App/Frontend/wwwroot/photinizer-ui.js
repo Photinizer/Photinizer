@@ -1,15 +1,10 @@
-/* ONCLICK EXAMPLE
-<button onclick="${x.self()}.counter++">+</button>
-*/
-/* BRIDGE EXAMPLE
-<button onclick="api.call('hello backend!', {}, (data, error) => { if (!error) alert(data); })">Say hello to backend!</button>
-*/
-/*
-It is recommended for frontend to use VS Code with 'es6-string-html' plugin.
- */
-
 /* 
 PHOTINIZER REACTIVE FRAMEWORK 
+
+It is recommended for frontend to use VS Code with 'es6-string-html' plugin.
+
+EXAMPLE:
+<button onclick="${x.self()}.counter++">+</button>
 */
 let lastId = 0;
 const components = new Map();
@@ -85,38 +80,3 @@ class Component {
         return this;
     }
 }
-
-/* 
-PHOTINIZER MESSAGE BRIDGE aka API
-*/
-class PhotinizerMessageBridge {
-    constructor() {
-        this.pendingRequests = new Map(); // requestId -> callback
-
-        window.external.receiveMessage(rawMsg => {
-            const { requestId, data, error } = JSON.parse(rawMsg);
-
-            if (this.pendingRequests.has(requestId)) {
-                const callback = this.pendingRequests.get(requestId);
-                callback(data, error);
-                this.pendingRequests.delete(requestId);
-            }
-        });
-    }
-
-    call(command, args = {}, callback) {
-        const requestId = Math.random().toString(36).substring(2, 9);
-
-        if (callback) {
-            this.pendingRequests.set(requestId, callback);
-        }
-
-        window.external.sendMessage(JSON.stringify({
-            requestId,
-            command,
-            args
-        }));
-    }
-}
-
-const api = new PhotinizerMessageBridge();
