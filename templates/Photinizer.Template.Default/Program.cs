@@ -10,7 +10,7 @@ new PhotinizerService()
 
         o.Messenger
             .OnQuery("Hello, backend!", _ => "Hello, frontend!")
-            .OnTask("save username", data => File.WriteAllText("data.dat", data.GetProperty("username").ToString()))
+            .OnTask<UserDto>("save username", data => File.WriteAllText("data.dat", data.UserName))
             .OnTask("delete username", _ => File.Delete("data.dat"))
             .OnQuery("get username", _ => File.Exists("data.dat") ? File.ReadAllText("data.dat") : "dear friend");
 
@@ -23,3 +23,5 @@ new PhotinizerService()
             }
         });
     });
+
+public record UserDto(string UserName);
