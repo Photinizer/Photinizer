@@ -1,6 +1,6 @@
 <Solution>
   <Folder Name="/Samples/">
-    <Project Path="sample/Photinizer.OwnUI.Greetings/Photinizer.OwnUI.Greetings.csproj" DefaultStartup="true"/>
+    <Project Path="samples/Photinizer.OwnUI.Greetings/Photinizer.OwnUI.Greetings.csproj" DefaultStartup="true"/>
   </Folder>
   <Folder Name="/UI/">
     <Project Path="src/Photinizer.UI.Own/Photinizer.UI.Own.csproj" Id="b0ff3fe5-52a8-42d4-92ed-ebf5ad5cf76d" />
