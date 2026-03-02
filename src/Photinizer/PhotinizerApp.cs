@@ -1,16 +1,15 @@
 ﻿using Photinizer.Core.Settings;
 using Photinizer.Exceptions;
-using Photinizer.Logging;
 using System.Runtime.InteropServices;
 
 namespace Photinizer;
 
-public class PhotinizerHost
+public class PhotinizerApp
 {
     private IPhotinizerUI _ui;
 
     public void SetUI(IPhotinizerUI ui) => _ui = ui;
-    public static IPhotinizerLogger Logger { get; set; } = new DefaultLogger();
+    public static event Action<Exception> Error;
 
     public int MyProperty { get; set; }
 
@@ -32,9 +31,9 @@ public class PhotinizerHost
         }
     }
 
-    private void RunApp(PhotinizerSettings settings, Action<PhotinizedApp> setup = null)
+    private void RunApp(PhotinizerSettings settings, Action<Application> setup = null)
     {
-        var app = new PhotinizedApp(settings);
+        var app = new Application(settings);
         setup?.Invoke(app);
         app.Run();
     }

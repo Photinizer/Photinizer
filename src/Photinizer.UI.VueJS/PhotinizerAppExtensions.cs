@@ -1,8 +1,8 @@
 ﻿namespace Photinizer.UI.VueJS;
 
-public static class PhotinizerHostExtensions
+public static class PhotinizerAppExtensions
 {
-    public static PhotinizerHost AddVueJs(this PhotinizerHost photinizer)
+    public static PhotinizerApp AddVueJs(this PhotinizerApp photinizer)
     {
         photinizer.SetUI(new PhotinizerVueUI());
         return photinizer;

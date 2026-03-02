@@ -3,7 +3,7 @@ using Photinizer.Template.Default.Backend.Controllers;
 using Photinizer.Template.Default.Backend.Services;
 using Photinizer.UI.Own;
 
-new PhotinizerHost()
+new PhotinizerApp()
     .AddOwnUI()
     .Run(config: o =>
     {

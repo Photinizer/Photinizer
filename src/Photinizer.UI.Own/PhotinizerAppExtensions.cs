@@ -1,8 +1,8 @@
 ﻿namespace Photinizer.UI.Own;
 
-public static class PhotinizerHostExtensions
+public static class PhotinizerAppExtensions
 {
-    public static PhotinizerHost AddOwnUI(this PhotinizerHost photinizer, string pathToComponents = null)
+    public static PhotinizerApp AddOwnUI(this PhotinizerApp photinizer, string pathToComponents = null)
     {
         photinizer.SetUI(new PhotinizerOwnUI(pathToComponents ?? Path.Combine("Frontend", "components")));
         return photinizer;
