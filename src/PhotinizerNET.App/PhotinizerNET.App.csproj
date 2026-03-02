@@ -30,7 +30,7 @@
     <EmbeddedResource Update="Frontend\wwwroot\css\styles.css">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Update="Frontend\wwwroot\photinizer-bridge.js">
+    <EmbeddedResource Update="Frontend\wwwroot\photinizer-messenger.js">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Update="Frontend\wwwroot\photinizer-ui.js">

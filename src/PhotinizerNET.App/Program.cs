@@ -1,7 +1,6 @@
 ﻿using PhotinizerNET;
 using PhotinizerNET.UI.Own;
 
-
 new Photinizer()
     .AddOwnUI(Path.Combine("Frontend", "components"))
     .Run(setup: o =>

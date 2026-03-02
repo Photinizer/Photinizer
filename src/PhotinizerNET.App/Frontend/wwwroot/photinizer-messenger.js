@@ -11,7 +11,7 @@ await api.task('endpoint', { arg1: arg1Val });
 // wait for result
 var result = await api.query('endpoint', { arg1: arg1Val });
 */
-class PhotinizerMessageBridge {
+class PhotinizerMessenger {
     constructor() {
         this.pendingRequests = new Map();
         this.handlers = new Map();
@@ -85,4 +85,4 @@ class PhotinizerMessageBridge {
     }
 }
 
-const api = new PhotinizerMessageBridge();
+const api = new PhotinizerMessenger();

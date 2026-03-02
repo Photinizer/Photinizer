@@ -1,6 +1,5 @@
 ﻿namespace PhotinizerNET.Messaging;
 
-// Thanks to Ivan (GitHub: https://github.com/ivanvoyager )
 public readonly record struct StatusCode(int Code)
 {
     public static readonly StatusCode NO_ANSWER = new(0);
