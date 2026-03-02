@@ -1,10 +1,10 @@
 ﻿namespace Photinizer.Messaging;
 
-internal interface ICrudRepository<T, TId>
+public interface ICrudRepository<T, TId>
 {
     Task<TId> Create(T entity);
     Task<T> Read(TId id);
-    Task<T> ReadAll();
+    Task<IReadOnlyCollection<T>> ReadAll();
     Task Update(T entity);
     Task Delete(TId id);
 }

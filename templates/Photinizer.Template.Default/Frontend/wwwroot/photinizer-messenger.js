@@ -15,10 +15,12 @@ class PhotinizerMessenger {
     constructor() {
         this.pendingRequests = new Map();
         this.handlers = new Map();
+        this.enableLogging = false;
 
         window.external.receiveMessage(rawMsg => {
             try {
                 const packet = JSON.parse(rawMsg);
+                if (this.enableLogging) console.log("Photinizer RPC:", packet);
                 const { requestId, endpoint, data, error } = packet;
 
                 if (requestId && this.pendingRequests.has(requestId)) {
@@ -41,9 +43,9 @@ class PhotinizerMessenger {
     async task(endpoint, data = {}) { return this._send(endpoint, data, true); }
     async query(endpoint, data = {}) { return this._send(endpoint, data, true); }
 
-    onMessage(endpoint, cb) { this.handlers.set(endpoint, { cb, reply: false }); }
-    onTask(endpoint, cb)    { this.handlers.set(endpoint, { cb, reply: true }); }
-    onQuery(endpoint, cb)   { this.handlers.set(endpoint, { cb, reply: true }); }
+    onMessage(endpoint, callback) { this.handlers.set(endpoint, { callback, reply: false }); }
+    onTask(endpoint, callback)    { this.handlers.set(endpoint, { callback, reply: true }); }
+    onQuery(endpoint, callback)   { this.handlers.set(endpoint, { callback, reply: true }); }
 
     _send(endpoint, data, expectResponse = false) {
         const requestId = expectResponse ? crypto.randomUUID() : null;
@@ -64,14 +66,11 @@ class PhotinizerMessenger {
         const handler = this.handlers.get(endpoint);
         
         try {
-            const result = await handler.cb(data);
-            
+            data = await handler.callback(data);
+            const payload = { endpoint, data, requestId };
+
             if (handler.reply && requestId) {
-                window.external.sendMessage(JSON.stringify({
-                    requestId,
-                    endpoint,
-                    data: result
-                }));
+                window.external.sendMessage(JSON.stringify(payload));
             }
         } catch (err) {
             if (requestId) {
@@ -82,6 +81,32 @@ class PhotinizerMessenger {
                 }));
             }
         }
+    }
+}
+
+class CrudController {
+    constructor(entityName){
+        this.entityName = entityName;
+    }
+
+    async create(entity) {
+        return await api.query(`${this.entityName}.create`, entity);
+    }
+
+    async read(id) {
+        return await api.query(`${this.entityName}.read`, id);
+    }
+
+    async readAll() {
+        return await api.query(`${this.entityName}.readAll`);
+    }
+
+    async update(entity) {
+        return await api.task(`${this.entityName}.update`, entity);
+    }
+
+    async delete(id) {
+        return await api.task(`${this.entityName}.delete`, id);
     }
 }
 

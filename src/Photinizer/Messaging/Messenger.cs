@@ -1,4 +1,5 @@
-﻿using Photino.NET;
+﻿using Photinizer.Exceptions;
+using Photino.NET;
 using System.Text.Json;
 
 namespace Photinizer.Messaging;
@@ -22,7 +23,7 @@ public class Messenger
         => AddHandler(endpoint, new(handler, NeedResponse: false));
 
     public Messenger OnMessageAsync<T>(string endpoint, Func<T, Task> handler)
-        => AddHandler(endpoint, new(el => handler(el.Deserialize<T>()), NeedResponse: false));
+        => AddHandler(endpoint, new(el => handler(Deserialize<T>(el, endpoint)), NeedResponse: false));
 
     public Messenger OnMessage(string endpoint, Action<JsonElement> handler)
     => OnMessageAsync(endpoint, el => {
@@ -32,7 +33,7 @@ public class Messenger
 
     public Messenger OnMessage<T>(string endpoint, Action<T> handler)
     => OnMessageAsync(endpoint, el => {
-        handler(el.Deserialize<T>(_deserializeOptions));
+        handler(Deserialize<T>(el, endpoint));
         return Task.CompletedTask;
     });
 
@@ -43,7 +44,7 @@ public class Messenger
         => AddHandler(endpoint, new(handler, NeedResponse: true));
 
     public Messenger OnTaskAsync<T>(string endpoint, Func<T, Task> handler)
-        => AddHandler(endpoint, new(el => handler(el.Deserialize<T>(_deserializeOptions)), NeedResponse: true));
+        => AddHandler(endpoint, new(el => handler(Deserialize<T>(el, endpoint)), NeedResponse: true));
 
     public Messenger OnTask(string endpoint, Action<JsonElement> handler)
         => OnTaskAsync(endpoint, el => {
@@ -53,7 +54,7 @@ public class Messenger
 
     public Messenger OnTask<T>(string endpoint, Action<T> handler)
         => OnTaskAsync(endpoint, el => {
-            handler(el.Deserialize<T>(_deserializeOptions));
+            handler(Deserialize<T>(el, endpoint));
             return Task.CompletedTask;
         });
 
@@ -64,18 +65,18 @@ public class Messenger
         => AddHandler(endpoint, new(handler, NeedResponse: true));
 
     public Messenger OnQueryAsync<T>(string endpoint, Func<T, Task<object>> handler)
-        => AddHandler(endpoint, new(el => handler(el.Deserialize<T>(_deserializeOptions)), NeedResponse: true));
+        => AddHandler(endpoint, new(el => handler(Deserialize<T>(el, endpoint)), NeedResponse: true));
 
     public Messenger OnQuery(string endpoint, Func<JsonElement, object> handler)
         => OnQueryAsync(endpoint, el => Task.FromResult(handler(el)));
 
     public Messenger OnQuery<T>(string endpoint, Func<T, object> handler)
-        => OnQueryAsync(endpoint, el => Task.FromResult(handler(el.Deserialize<T>(_deserializeOptions))));
+        => OnQueryAsync(endpoint, el => Task.FromResult(handler(Deserialize<T>(el, endpoint))));
     #endregion
 
     public Messenger Register(INeedMessenger service)
     {
-        service.Incorporate(this);
+        service.IncorporateMessenger(this);
         return this;
     }
 
@@ -88,6 +89,42 @@ public class Messenger
         _handlers[endpoint] = handler;
         return this;
     }
+
+    public async void SendMessage(string endpoint, object data)
+        => _window.SendWebMessage(JsonSerializer.Serialize(new { requestId = Guid.NewGuid().ToString(), data }));
+
+    public Task SendTask(string endpoint, object data)
+    {
+        var reqId = Guid.NewGuid().ToString();
+        var json = JsonSerializer.Serialize(new { endpoint, requestId = reqId, data });
+        var tcs = new TaskCompletionSource<JsonElement>();
+        _pendingRequests[reqId] = tcs;
+        _window.SendWebMessage(json);
+        return tcs.Task;
+    }
+
+    public Task<JsonElement> SendQuery(string endpoint, object data)
+    {
+        var reqId = Guid.NewGuid().ToString();
+        var json = JsonSerializer.Serialize(new { endpoint, requestId = reqId, data });
+        var tcs = new TaskCompletionSource<JsonElement>();
+        _pendingRequests[reqId] = tcs;
+        _window.SendWebMessage(json);
+        return tcs.Task;
+    }
+
+    private T Deserialize<T>(JsonElement el, string endpoint)
+    {
+        try
+        {
+            return el.Deserialize<T>(_deserializeOptions);
+        }
+        catch (Exception ex)
+        {
+            throw new PhotinizerException($"Endpoint data error: endpoint '{endpoint}' expects data of type '{typeof(T).Name}'", ex);
+        }
+    }
+
 
     private async void OnMessageReceived(object sender, string message)
     {
@@ -121,26 +158,4 @@ public class Messenger
         }
     }
 
-    public async void SendMessage(string endpoint, object data)
-        => _window.SendWebMessage(JsonSerializer.Serialize(new { requestId = Guid.NewGuid().ToString(), data }));
-
-    public Task SendTask(string endpoint, object data)
-    {
-        var reqId = Guid.NewGuid().ToString();
-        var json = JsonSerializer.Serialize(new { endpoint, requestId = reqId, data });
-        var tcs = new TaskCompletionSource<JsonElement>();
-        _pendingRequests[reqId] = tcs;
-        _window.SendWebMessage(json);
-        return tcs.Task;
-    }
-
-    public Task<JsonElement> SendQuery(string endpoint, object data)
-    {
-        var reqId = Guid.NewGuid().ToString();
-        var json = JsonSerializer.Serialize(new { endpoint, requestId = reqId, data });
-        var tcs = new TaskCompletionSource<JsonElement>();
-        _pendingRequests[reqId] = tcs;
-        _window.SendWebMessage(json);
-        return tcs.Task;
-    }
 }

@@ -1,16 +1,20 @@
 ﻿using Photinizer.Core.Settings;
 using Photinizer.Exceptions;
+using Photinizer.Logging;
 using System.Runtime.InteropServices;
 
 namespace Photinizer;
 
-public class PhotinizerService
+public class PhotinizerHost
 {
     private IPhotinizerUI _ui;
 
     public void SetUI(IPhotinizerUI ui) => _ui = ui;
+    public static IPhotinizerLogger Logger { get; set; } = new DefaultLogger();
 
-    public void Run(Action<PhotinizedApp> setup = null)
+    public int MyProperty { get; set; }
+
+    public void Run(Action<IPhotinizerConfiguration> config = null)
     {
         var settings = SettingsProvider.Get();
         var buildSettings = new PhotinizerBuildSettings();
@@ -22,9 +26,9 @@ public class PhotinizerService
         {
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                RunIsSTAThread(() => RunApp(settings, setup));
+                RunIsSTAThread(() => RunApp(settings, config));
             else
-                RunApp(settings, setup);
+                RunApp(settings, config);
         }
     }
 

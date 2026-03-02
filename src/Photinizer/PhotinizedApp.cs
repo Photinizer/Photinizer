@@ -4,7 +4,7 @@ using Photino.NET;
 
 namespace Photinizer;
 
-public class PhotinizedApp(PhotinizerSettings settings)
+internal class PhotinizedApp(PhotinizerSettings settings) : IPhotinizerConfiguration
 {
     public PhotinoWindow Window => field ??= CreateWindow();
     public Messenger Messenger => field ??= new(Window);

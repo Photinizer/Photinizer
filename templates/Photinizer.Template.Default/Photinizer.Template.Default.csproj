@@ -9,12 +9,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Remove="Backend\**" />
-    <EmbeddedResource Remove="Backend\**" />
-    <None Remove="Backend\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="frontend\components\common\greetings.js" />
     <None Remove="frontend\components\common\Label.js" />
     <None Remove="frontend\components\common\section.js" />

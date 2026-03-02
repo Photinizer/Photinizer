@@ -24,7 +24,8 @@ internal class PhotinizerOwnUI(string pathToComponents) : IPhotinizerUI
             { "TITLE", settings.Title },
             { "ROOT_COMPONENT", settings.UI.RootComponent },
         };
-        BuildTemplate("index.html", replacements, settings, buildSettings);
+        foreach ( var file in new[] { "index.html", "photinizer-init.js" })
+            BuildTemplate(file, replacements, settings, buildSettings);
 
         Console.WriteLine("build templates: done");
     }

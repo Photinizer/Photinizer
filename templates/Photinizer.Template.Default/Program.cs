@@ -1,27 +1,17 @@
 ﻿using Photinizer;
+using Photinizer.Template.Default.Backend.Controllers;
+using Photinizer.Template.Default.Backend.Services;
 using Photinizer.UI.Own;
 
-new PhotinizerService()
+new PhotinizerHost()
     .AddOwnUI()
-    .Run(setup: o =>
+    .Run(config: o =>
     {
         // for example
         o.Window.SetDevToolsEnabled(true);
 
         o.Messenger
             .OnQuery("Hello, backend!", _ => "Hello, frontend!")
-            .OnTask<UserDto>("save username", data => File.WriteAllText("data.dat", data.UserName))
-            .OnTask("delete username", _ => File.Delete("data.dat"))
-            .OnQuery("get username", _ => File.Exists("data.dat") ? File.ReadAllText("data.dat") : "dear friend");
-
-        Task.Run(async () =>
-        {
-            while (true)
-            {
-                await Task.Delay(1000);
-                await o.Messenger.SendTask("update timer", DateTime.Now.ToString("HH:mm:ss"));
-            }
-        });
+            .Register(new UserController())
+            .Register(new TimeSender());
     });
-
-public record UserDto(string UserName);

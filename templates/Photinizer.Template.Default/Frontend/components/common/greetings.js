@@ -28,26 +28,31 @@ class Greetings extends Component {
                 </div>
             </div>`
         })
-        this.label = new Label().bindProp('text', this, 'name', x => `Hello, ${x.name}!`)
-        this.section = new Section(this, ['name'], x => /*html*/`<p>Nice to meet you, ${x.name}!</p>`)
-        this.timerSection = new Section(this, ['time'], x => /*html*/`<p class="timer">Time is ${x.time}!</p>`)
+        this.label = new Label().bindProp('text', this, 'name', x => `Hello, ${x.name}!`);
+        this.section = new Section(this, ['name'], x => /*html*/`<p>Nice to meet you, ${x.name}!</p>`);
+        this.timerSection = new Section(this, ['time'], x => /*html*/`<p class="timer">Time is ${x.time}!</p>`);
  
-        api.query('get username', {}).then(data => {
-            this.name = data
+        this.users = new CrudController('User');
+
+        this.users.read(1).then(data => {
+            this.name = data.UserName
             this.update()
-        })
+        }).catch(error => alert(error)); 
         api.onTask('update timer', data => this.time = data);
     }
     async hello() {
         alert(await api.query('Hello, backend!', {}))
     }
     async remember() {
-        await api.task('save username', { username: this.name })
-        alert('Username saved')
+        await this.users.create({id:1, username: this.name });
+        const user = await this.users.read(1);
+        this.name = user.UserName;
+        this.update();
+        alert('Username saved');
     }
     async forget() {
-        await api.task('delete username', { username: this.name })
-        this.name = 'dear friend'
-        this.update()
+        await this.users.delete(1);
+        this.name = 'dear friend';
+        this.update();
     }
 }

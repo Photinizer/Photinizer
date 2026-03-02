@@ -1,17 +1,22 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>[[TITLE]]</title>
-        <meta charset="utf-8">
-        <script src="photinizer-ui.js"></script>
-        <script src="photinizer-messenger.js"></script>
-        <script src="photinizer-bundle.js"></script>
-        <link rel="stylesheet" href="css/styles.css">
-    </head>
+<head>
+    <title>[[TITLE]]</title>
+    <meta charset="utf-8">
+    <!-- Messenger between C# and JS -->
+    <script src="photinizer-messenger.js"></script>
+
+    <!-- PhotinizerUI and components -->
+    <script src="photinizer-ui.js"></script>
+    <script src="photinizer-bundle.js" defer></script>
+
+    <!-- Start application script -->
+    <script src="photinizer-init.js" defer></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/styles.css">
+</head>
     <body>
         <div id="app"></div>
-        <script>
-new UI(new [[ROOT_COMPONENT]])
-        </script>
     </body>
 </html>
