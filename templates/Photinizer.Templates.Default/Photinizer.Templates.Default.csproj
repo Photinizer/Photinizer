@@ -1,0 +1,55 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<EmbeddedResource Include="Frontend\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="frontend\components\common\greetings.js" />
+    <None Remove="frontend\components\common\Label.js" />
+    <None Remove="frontend\components\common\section.js" />
+    <None Remove="frontend\components\users\enums.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Photinizer.UI.Own\Photinizer.UI.Own.csproj" />
+    <ProjectReference Include="..\..\src\Photinizer\Photinizer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Frontend\wwwroot\css\styles.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Frontend\wwwroot\photinizer-messenger.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Frontend\wwwroot\photinizer-ui.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Frontend\wwwroot\photinizer-ui.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Frontend\wwwroot\index.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+	
+  <Target Name="PreparationStep" AfterTargets="Build" Condition="'$(IsCrossTargetingBuild)' != 'true'">
+    <PropertyGroup>
+      <PrepCommand>dotnet "$(TargetPath)" --build-source "$(MSBuildProjectDirectory)"</PrepCommand>
+    </PropertyGroup>
+
+    <Message Text="Running photinization: $(PrepCommand)" Importance="high" />
+    <Exec Command="$(PrepCommand)" WorkingDirectory="$(MSBuildProjectDirectory)" StandardOutputImportance="high" />
+  </Target>
+</Project>
