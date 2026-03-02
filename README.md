@@ -1,5 +1,7 @@
 
 # Photinizer
+[![Build](https://github.com/Photinizer/Photinizer/actions/workflows/ci.yml/badge.svg)](https://github.com/Photinizer/Photinizer/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/Photinizer/Photinizer?label=license)](https://github.com/Photinizer/Photinizer/blob/master/LICENSE.txt)
 
 **Photinizer** is a fast, simple, and lightweight framework for building modern cross-platform desktop .NET applications without XAML, npm, or Electron.
 
