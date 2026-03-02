@@ -1,6 +1,6 @@
-﻿using PhotinizerNET.Core.Settings;
+﻿using Photinizer.Core.Settings;
 
-namespace PhotinizerNET.UI.VueJS;
+namespace Photinizer.UI.VueJS;
 
 
 /// <summary>

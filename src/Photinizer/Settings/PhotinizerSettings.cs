@@ -1,6 +1,6 @@
-﻿using static PhotinizerNET.Core.Settings.PhotinizerSettings;
+﻿using static Photinizer.Core.Settings.PhotinizerSettings;
 
-namespace PhotinizerNET.Core.Settings;
+namespace Photinizer.Core.Settings;
 
 public record PhotinizerSettings(
     WindowSettings Window,

@@ -22,8 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\PhotinizerNET.UI.Own\PhotinizerNET.UI.Own.csproj" />
-    <ProjectReference Include="..\PhotinizerNET\PhotinizerNET.csproj" />
+    <ProjectReference Include="..\..\src\Photinizer.UI.Own\Photinizer.UI.Own.csproj" />
+    <ProjectReference Include="..\..\src\Photinizer\Photinizer.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <ProjectReference Include="..\src\PhotinizerNET\PhotinizerNET.csproj" />
+    <ProjectReference Include="..\Photinizer\Photinizer.csproj" />
   </ItemGroup>
 </Project>

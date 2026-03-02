@@ -1,6 +1,6 @@
-﻿using PhotinizerNET.Core.Settings;
+﻿using Photinizer.Core.Settings;
 
-namespace PhotinizerNET;
+namespace Photinizer;
 
 internal class PhotinizerBuilder(
     PhotinizerSettings settings, 

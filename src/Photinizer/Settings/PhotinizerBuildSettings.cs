@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace PhotinizerNET.Core.Settings;
+namespace Photinizer.Core.Settings;
 
 public class PhotinizerBuildSettings
 {

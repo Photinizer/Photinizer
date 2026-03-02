@@ -1,8 +1,8 @@
-﻿using PhotinizerNET;
-using PhotinizerNET.UI.Own;
+﻿using Photinizer;
+using Photinizer.UI.Own;
 
-new Photinizer()
-    .AddOwnUI(Path.Combine("Frontend", "components"))
+new PhotinizerService()
+    .AddOwnUI()
     .Run(setup: o =>
     {
         // for example

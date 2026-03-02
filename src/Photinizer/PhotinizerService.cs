@@ -1,10 +1,10 @@
-﻿using PhotinizerNET.Core.Settings;
-using PhotinizerNET.Exceptions;
+﻿using Photinizer.Core.Settings;
+using Photinizer.Exceptions;
 using System.Runtime.InteropServices;
 
-namespace PhotinizerNET;
+namespace Photinizer;
 
-public class Photinizer
+public class PhotinizerService
 {
     private IPhotinizerUI _ui;
 

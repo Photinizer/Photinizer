@@ -1,4 +1,4 @@
-﻿namespace PhotinizerNET.UI.Own;
+﻿namespace Photinizer.UI.Own;
 
 internal static class ComponentDependencyResolver
 {

@@ -1,6 +1,6 @@
-﻿using PhotinizerNET.Core.Settings;
+﻿using Photinizer.Core.Settings;
 
-namespace PhotinizerNET;
+namespace Photinizer;
 
 public interface IPhotinizerUI
 {

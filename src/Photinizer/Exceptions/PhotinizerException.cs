@@ -1,4 +1,4 @@
-﻿namespace PhotinizerNET.Exceptions;
+﻿namespace Photinizer.Exceptions;
 
 internal class PhotinizerException : Exception
 {

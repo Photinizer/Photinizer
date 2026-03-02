@@ -1,4 +1,4 @@
-﻿namespace PhotinizerNET.Messaging;
+﻿namespace Photinizer.Messaging;
 
 public readonly record struct StatusCode(int Code)
 {

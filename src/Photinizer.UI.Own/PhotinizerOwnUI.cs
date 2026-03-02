@@ -1,7 +1,7 @@
-﻿using PhotinizerNET.Core.Settings;
+﻿using Photinizer.Core.Settings;
 using System.Text.RegularExpressions;
 
-namespace PhotinizerNET.UI.Own;
+namespace Photinizer.UI.Own;
 
 internal class PhotinizerOwnUI(string pathToComponents) : IPhotinizerUI
 {

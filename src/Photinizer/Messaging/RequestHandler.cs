@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace PhotinizerNET.Messaging;
+namespace Photinizer.Messaging;
 
 
 internal readonly record struct RequestHandler(Func<JsonElement, Task<object>> HandleFunc, bool NeedResponse)

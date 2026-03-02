@@ -1,7 +1,7 @@
 ﻿using Photino.NET;
 using System.Text.Json;
 
-namespace PhotinizerNET.Messaging;
+namespace Photinizer.Messaging;
 
 public class Messenger
 {

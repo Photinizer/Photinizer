@@ -1,8 +1,8 @@
-﻿using PhotinizerNET.Common;
+﻿using Photinizer.Common;
 using System.Text.Json;
 using Options = System.Text.Json.JsonSerializerOptions;
 
-namespace PhotinizerNET.Core.Settings;
+namespace Photinizer.Core.Settings;
 
 internal static class SettingsProvider
 {
