@@ -25,7 +25,7 @@ internal class CrudRepository<T> : ICrudRepository<T, int>
     public async Task<T> Read(int id)
     {
         var json = await File.ReadAllTextAsync(_db);
-        return JsonSerializer.Deserialize<T>(json);
+        return JsonSerializer.Deserialize<T>(json)!;
     }
 
     public async Task<IReadOnlyCollection<T>> ReadAll()

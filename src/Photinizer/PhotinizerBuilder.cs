@@ -1,4 +1,4 @@
-﻿using Photinizer.Core.Settings;
+﻿using Photinizer.Settings;
 
 namespace Photinizer;
 

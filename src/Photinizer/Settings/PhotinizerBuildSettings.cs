@@ -1,24 +1,26 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Photinizer.Core.Settings;
+namespace Photinizer.Settings;
 
-public class PhotinizerBuildSettings
+public partial class PhotinizerBuildSettings
 {
-    private string _args;
+    private readonly string _args;
 
-    private const string _buildSouceArg = "--build-source";
-    private string _buildSource;
+    private const string BuildSouceArg = "--build-source";
 
     public PhotinizerBuildSettings()
     {
         _args = string.Join(" ", Environment.GetCommandLineArgs());
-        IsBuildMode = _args.Contains(_buildSouceArg);
+        IsBuildMode = _args.Contains(BuildSouceArg);
     }
 
     public bool IsBuildMode { get; private set; }
 
-    public string BuildSource => _buildSource ??= GetBuildSource();
+    public string BuildSource => field ??= GetBuildSource();
 
     private string GetBuildSource()
-        => Regex.Match(_args, "--build-source=\"(.+?)\"").Groups[1].Value;
+        => s_BuildSource().Match(_args).Groups[1].Value;
+
+    [GeneratedRegex("--build-source=\"(.+?)\"")]
+    private static partial Regex s_BuildSource();
 }

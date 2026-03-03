@@ -1,5 +1,5 @@
-﻿using Photinizer.Core.Settings;
-using Photinizer.Messaging;
+﻿using Photinizer.Messaging;
+using Photinizer.Settings;
 using Photino.NET;
 
 namespace Photinizer;
