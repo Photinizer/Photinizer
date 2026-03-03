@@ -1,9 +1,9 @@
-﻿using Photinizer.Core.Settings;
+﻿using Photinizer.Settings;
 using System.Text.RegularExpressions;
 
 namespace Photinizer.UI.Own;
 
-internal class PhotinizerOwnUI(string pathToComponents) : IPhotinizerUI
+internal partial class PhotinizerOwnUI(string pathToComponents) : IPhotinizerUI
 {
     public void Build(PhotinizerSettings settings, PhotinizerBuildSettings buildSettings)
     {
@@ -15,7 +15,7 @@ internal class PhotinizerOwnUI(string pathToComponents) : IPhotinizerUI
         Console.WriteLine("Photinizer: Build done.");
     }
 
-    private void BuildTemplates(PhotinizerSettings settings, PhotinizerBuildSettings buildSettings)
+    private static void BuildTemplates(PhotinizerSettings settings, PhotinizerBuildSettings buildSettings)
     {
         Console.WriteLine("build templates: started");
 
@@ -65,15 +65,15 @@ internal class PhotinizerOwnUI(string pathToComponents) : IPhotinizerUI
         Console.WriteLine("build bundle file: done");
     }
 
-    private List<string> GetLinks(string filePath, string content)
+    private static List<string> GetLinks(string filePath, string content)
     {
-        var regex = new Regex(@"//\s*using\s+(?<dep>\S+?)(\.js|\s|$)", RegexOptions.Compiled);
+        var regex = GetLinks();
         var root = Path.GetDirectoryName(filePath);
 
-        return regex.Matches(content).Select(x => Path.Combine(root, $"{x.Groups["dep"]}.js")).ToList();
+        return regex.Matches(content).Select(x => Path.Combine(root ?? string.Empty, $"{x.Groups["dep"]}.js")).ToList();
     }
 
-    void BuildTemplate(string path, Dictionary<string, string> replacements, PhotinizerSettings settings, PhotinizerBuildSettings buildSettings)
+    private static void BuildTemplate(string path, Dictionary<string, string> replacements, PhotinizerSettings settings, PhotinizerBuildSettings buildSettings)
     {
         var subPath = Path.Combine("Frontend", "wwwroot", path);
         var sourcePath = Path.Combine(buildSettings.BuildSource, subPath);
@@ -90,16 +90,19 @@ internal class PhotinizerOwnUI(string pathToComponents) : IPhotinizerUI
         File.WriteAllText(targetPath, content);
     }
 
-    static void CrashWithError(string file, int line, string message, string code = "PREP001")
+    private static void CrashWithError(string file, int line, string message, string code = "PREP001")
     {
         ReportError(file, line, message, code);
         Environment.Exit(1);
     }
 
-    static void ReportError(string file, int line, string message, string code = "PREP001")
+    private static void ReportError(string file, int line, string message, string code = "PREP001")
     {
         // Формат: path(line,col): error CODE: message
         // Если путь содержит пробелы, MSBuild все равно его поймет без кавычек здесь
         Console.WriteLine($"{file}({line},1): error {code}: {message}");
     }
+
+    [GeneratedRegex(@"//\s*using\s+(?<dep>\S+?)(\.js|\s|$)", RegexOptions.Compiled)]
+    private static partial Regex GetLinks();
 }

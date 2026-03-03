@@ -1,19 +1,16 @@
-﻿using Photinizer.Core.Settings;
-using Photinizer.Exceptions;
+﻿using Photinizer.Exceptions;
+using Photinizer.Settings;
 using System.Runtime.InteropServices;
 
 namespace Photinizer;
 
 public class PhotinizerApp
 {
-    private IPhotinizerUI _ui;
+    private IPhotinizerUI? _ui;
 
     public void SetUI(IPhotinizerUI ui) => _ui = ui;
-    public static event Action<Exception> Error;
 
-    public int MyProperty { get; set; }
-
-    public void Run(Action<IPhotinizerConfiguration> config = null)
+    public void Run(Action<IPhotinizerConfiguration>? config = null)
     {
         var settings = SettingsProvider.Get();
         var buildSettings = new PhotinizerBuildSettings();
@@ -31,14 +28,14 @@ public class PhotinizerApp
         }
     }
 
-    private void RunApp(PhotinizerSettings settings, Action<Application> setup = null)
+    private static void RunApp(PhotinizerSettings settings, Action<Application>? setup = null)
     {
         var app = new Application(settings);
         setup?.Invoke(app);
         app.Run();
     }
 
-    private void RunIsSTAThread(ThreadStart threadStart)
+    private static void RunIsSTAThread(ThreadStart threadStart)
     {
         Thread newThread = new(threadStart);
 #pragma warning disable CA1416 // Only for Windows (already checked above)
