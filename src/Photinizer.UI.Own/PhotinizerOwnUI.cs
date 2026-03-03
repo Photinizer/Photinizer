@@ -1,11 +1,12 @@
-﻿using Photinizer.Settings;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
+using Photinizer.Builder;
+using Photinizer.Settings;
 
 namespace Photinizer.UI.Own;
 
 internal partial class PhotinizerOwnUI(string pathToComponents) : IPhotinizerUI
 {
-    public void Build(PhotinizerSettings settings, PhotinizerBuildSettings buildSettings)
+    public void Build(PhotinizerSettings settings, PhotinizerBuildOptions buildSettings)
     {
         Console.WriteLine("Photinizer: Build started...");
 
@@ -15,7 +16,7 @@ internal partial class PhotinizerOwnUI(string pathToComponents) : IPhotinizerUI
         Console.WriteLine("Photinizer: Build done.");
     }
 
-    private static void BuildTemplates(PhotinizerSettings settings, PhotinizerBuildSettings buildSettings)
+    private static void BuildTemplates(PhotinizerSettings settings, PhotinizerBuildOptions buildSettings)
     {
         Console.WriteLine("build templates: started");
 
@@ -30,9 +31,9 @@ internal partial class PhotinizerOwnUI(string pathToComponents) : IPhotinizerUI
         Console.WriteLine("build templates: done");
     }
 
-    private void CreateBundleFile(PhotinizerBuildSettings buildSettings)
+    private void CreateBundleFile(PhotinizerBuildOptions buildSettings)
     {
-        Console.WriteLine("build bundle file: started");
+        Console.WriteLine($"build bundle file: started. BuildSource: {buildSettings.BuildSource}, pathToComponents: {pathToComponents}");
 
         var componentsPath = Path.Combine(buildSettings.BuildSource, pathToComponents);
 
@@ -73,7 +74,7 @@ internal partial class PhotinizerOwnUI(string pathToComponents) : IPhotinizerUI
         return regex.Matches(content).Select(x => Path.Combine(root ?? string.Empty, $"{x.Groups["dep"]}.js")).ToList();
     }
 
-    private static void BuildTemplate(string path, Dictionary<string, string> replacements, PhotinizerSettings settings, PhotinizerBuildSettings buildSettings)
+    private static void BuildTemplate(string path, Dictionary<string, string> replacements, PhotinizerSettings settings, PhotinizerBuildOptions buildSettings)
     {
         var subPath = Path.Combine("Frontend", "wwwroot", path);
         var sourcePath = Path.Combine(buildSettings.BuildSource, subPath);

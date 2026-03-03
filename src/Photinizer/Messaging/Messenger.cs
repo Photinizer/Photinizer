@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Photinizer.Exceptions;
 using Photino.NET;
+
 namespace Photinizer.Messaging;
 
 public class Messenger
@@ -12,6 +13,7 @@ public class Messenger
 
     public Messenger(PhotinoWindow window)
     {
+        ArgumentNullException.ThrowIfNull(window);
         _window = window;
         _window.RegisterWebMessageReceivedHandler(OnMessageReceived);
     }

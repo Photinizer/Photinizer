@@ -1,10 +1,13 @@
-﻿namespace Photinizer.UI.VueJS;
+﻿using Photinizer.Builder;
+
+namespace Photinizer.UI.VueJS;
 
 public static class PhotinizerAppExtensions
 {
-    public static PhotinizerApp AddVueJs(this PhotinizerApp photinizer)
+    public static IAppBuilder AddVueJs(this IAppBuilder builder)
     {
-        photinizer.SetUI(new PhotinizerVueUI());
-        return photinizer;
+        ArgumentNullException.ThrowIfNull(builder);
+        builder.UseUI(new PhotinizerVueUI());
+        return builder;
     }
 }

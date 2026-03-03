@@ -1,19 +1,18 @@
-﻿using Photinizer.Messaging;
-using Photinizer.Settings;
+﻿using Photinizer.Settings;
 using Photino.NET;
 
-namespace Photinizer;
+namespace Photinizer.Builder;
 
-internal class Application(PhotinizerSettings settings) : IPhotinizerConfiguration
+internal static class MainWindowExtensions
 {
-    public PhotinoWindow Window => field ??= CreateWindow();
-    public Messenger Messenger => field ??= new(Window);
-
-    private PhotinoWindow CreateWindow()
+    public static PhotinoWindow UseOwnSettings(this PhotinoWindow window, PhotinizerSettings settings)//TODO WindowSettings?
     {
+        ArgumentNullException.ThrowIfNull(window);
+        ArgumentNullException.ThrowIfNull(settings);
+
         var windowSettings = settings.Window;
 
-        var window = new PhotinoWindow()
+        window
             .SetTitle(settings.Title)
             .SetUseOsDefaultSize(false)
             .SetSize(windowSettings.Width, windowSettings.Height)
@@ -27,11 +26,5 @@ internal class Application(PhotinizerSettings settings) : IPhotinizerConfigurati
         if (windowSettings.Center) window.Center();
 
         return window;
-    }
-
-    public void Run()
-    {
-        Window.Load(Path.Combine("Frontend", "wwwroot", "index.html"));
-        Window.WaitForClose();
     }
 }
