@@ -1,12 +1,11 @@
-﻿using Photinizer.Common;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace Photinizer.Settings;
 
 internal static class SettingsProvider
 {
-    private static readonly Cached<PhotinizerSettings> s_settings = new(LoadFromAppsettingsOrDefault);
-    public static PhotinizerSettings Get() => s_settings.Get();
+    private static readonly Lazy<PhotinizerSettings> s_settings = new(LoadFromAppsettingsOrDefault);
+    public static PhotinizerSettings Get() => s_settings.Value;
     
     private static readonly JsonSerializerOptions s_readOptions = new() { PropertyNameCaseInsensitive = true };
 

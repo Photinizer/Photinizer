@@ -1,0 +1,6 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Photinizer.UI.Own\Photinizer.UI.Own.csproj" />
+    <ProjectReference Include="..\Photinizer.UI.VueJS\Photinizer.UI.VueJS.csproj" />
+  </ItemGroup>
+</Project>

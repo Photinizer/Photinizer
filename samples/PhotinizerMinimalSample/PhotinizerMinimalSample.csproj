@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Photinizer.Desktop\Photinizer.Desktop.csproj" />
+  </ItemGroup>
+
+  <Target Name="PreparationStep" AfterTargets="Build" Condition="'$(IsCrossTargetingBuild)' != 'true'">
+    <PropertyGroup>
+      <PrepCommand>dotnet "$(TargetPath)" --build-source "$(MSBuildProjectDirectory)"</PrepCommand>
+    </PropertyGroup>
+
+    <Message Text="Running photinization: $(PrepCommand)" Importance="high" />
+    <Exec Command="$(PrepCommand)" WorkingDirectory="$(MSBuildProjectDirectory)" StandardOutputImportance="high" />
+  </Target>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Frontend\wwwroot\css\styles.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Frontend\wwwroot\photinizer-messenger.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Frontend\wwwroot\photinizer-ui.js">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Frontend\wwwroot\index.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>

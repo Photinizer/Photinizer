@@ -1,14 +1,14 @@
-﻿using Photinizer;
+﻿using Photinizer.Builder;
 using Photinizer.Template.Default.Backend.Controllers;
 using Photinizer.Template.Default.Backend.Services;
 using Photinizer.UI.Own;
 
-new PhotinizerApp()
-    .AddOwnUI()
+Application
+    .Create(b => b.AddOwnUI())
     .Run(config: o =>
     {
         // for example
-        o.Window.SetDevToolsEnabled(true);
+        o.MainWindow.SetDevToolsEnabled(true);
 
         o.Messenger
             .OnQuery("Hello, backend!", _ => "Hello, frontend!")
