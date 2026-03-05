@@ -64,13 +64,13 @@ public class Application : IPhotinizerConfiguration
 
     public PhotinoWindow MainWindow
     {
-        get => field ?? throw new NullReferenceException("MainWindow is not created yet."); 
+        get => field ?? throw new InvalidOperationException("MainWindow is not created yet."); 
         private set;
     }
 
     public Messenger Messenger
     {
-        get => field ?? throw new NullReferenceException("Messenger is not created yet."); 
+        get => field ?? throw new InvalidOperationException("Messenger is not created yet."); 
         private set;
     }
 
@@ -78,6 +78,17 @@ public class Application : IPhotinizerConfiguration
     {
         AfterStartCallback += callback;//TODO thread-safe
         return this;
+    }
+
+    private string ResolvePath()
+    {
+        var webRoot = Configuration[ConfigurationDefaults.WebRootKey];
+        if (!string.IsNullOrWhiteSpace((webRoot)))
+        {
+            return Path.Combine(webRoot, "index.html");
+        }
+
+        return Path.Combine(Environment.ContentRootPath, "wwwroot", "index.html");
     }
 
     public void Run(Action<IPhotinizerConfiguration>? config = null)
@@ -107,7 +118,7 @@ public class Application : IPhotinizerConfiguration
 
         setup?.Invoke(this);
 
-        MainWindow.Load(Path.Combine(Environment.ContentRootPath, "wwwroot", "index.html"));
+        MainWindow.Load(ResolvePath());
         MainWindow.WaitForClose();
     }
 

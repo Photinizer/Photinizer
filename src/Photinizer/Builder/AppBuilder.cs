@@ -21,45 +21,29 @@ internal sealed class AppBuilder : IAppBuilder
 
         var configuration = new ConfigurationManager();
 
-        //set options
-        List<KeyValuePair<string, string?>>? optionList = null;
-        if (appOptions.ApplicationName is null && configuration["applicationName"] is null)
+        SetDefaultApplicationName(appOptions, configuration);
+        SetDefaultContentRoot(appOptions, configuration);
+
+        InitializeDefaults(appOptions, configuration);
+
+        // Set WebRootPath if necessary
+        if (appOptions.WebRootPath is not null)
         {
-            (optionList ??= []).Add(new("applicationName", Assembly.GetEntryAssembly()?.GetName().Name ?? string.Empty));
-        }
-        if (appOptions.EnvironmentName is not null && configuration["environment"] is null)
-        {
-            (optionList ??= []).Add(new("environment", appOptions.EnvironmentName));
-        }
-        if (appOptions.ContentRootPath is null && configuration["contentRoot"] is null)
-        {
-            (optionList ??= []).Add(new("contentRoot", Path.GetFullPath("Frontend")));
-        }
-        if (optionList is not null)
-        {
-            configuration.AddInMemoryCollection(optionList);
+            configuration.AddInMemoryCollection(new[]
+            {
+                new KeyValuePair<string, string?>(ConfigurationDefaults.WebRootKey, appOptions.WebRootPath),
+            });
         }
 
         var env = new AppEnvironment()
         {
-            ApplicationName = appOptions.ApplicationName ?? configuration["applicationName"] ?? string.Empty,
-            EnvironmentName = appOptions.EnvironmentName ?? configuration["environment"] ?? string.Empty,
-            ContentRootPath = appOptions.ContentRootPath ?? configuration["contentRoot"] ?? string.Empty,
+            ApplicationName = appOptions.ApplicationName ?? configuration[ConfigurationDefaults.ApplicationKey] ?? string.Empty,
+            EnvironmentName = appOptions.EnvironmentName ?? configuration[ConfigurationDefaults.EnvironmentKey] ?? Environments.Production,
+            ContentRootPath = ResolveContentRootPath(appOptions.ContentRootPath ?? configuration[ConfigurationDefaults.ContentRootKey] ?? string.Empty, AppContext.BaseDirectory),
         };
 
-        bool reloadOnChange = false;
-        if (configuration["reloadOnChange"] is { Length: > 0 } str)
-        {
-            bool.TryParse(str, out reloadOnChange);
-        }
-        configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: reloadOnChange)
-            .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: reloadOnChange);
-
-        configuration.AddEnvironmentVariables();
-        if (appOptions.Args is { Length: > 0 })
-        {
-            configuration.AddCommandLine(appOptions.Args);
-        }
+        ApplyDefaultAppConfiguration(env, configuration, appOptions.Args);
+        AddDefaultServices(configuration, _serviceCollection);
 
         Environment = env;
         Configuration = configuration;
@@ -90,6 +74,102 @@ internal sealed class AppBuilder : IAppBuilder
     public ILoggingBuilder Logging { get; }
 
     public void UseUI(IPhotinizerUI ui) => _ui = ui;
+
+
+    private static void SetDefaultApplicationName(AppOptions appOptions, ConfigurationManager configuration)
+    {
+        if (appOptions.ApplicationName is null && configuration[ConfigurationDefaults.ApplicationKey] is null)
+        {
+            configuration.AddInMemoryCollection(new[]
+            {
+                new KeyValuePair<string, string?>(ConfigurationDefaults.ApplicationKey, Assembly.GetEntryAssembly()?.GetName().Name),
+            });
+        }
+    }
+
+    private static void SetDefaultContentRoot(AppOptions appOptions, ConfigurationManager configuration)
+    {
+        if (appOptions.ContentRootPath is null && configuration[ConfigurationDefaults.ContentRootKey] is null)
+        {
+            configuration.AddInMemoryCollection(new[]
+            {
+                new KeyValuePair<string, string?>(ConfigurationDefaults.ContentRootKey, "Frontend"),
+            });
+        }
+    }
+
+    private static void InitializeDefaults(AppOptions appOptions, ConfigurationManager configuration)
+    {
+        // AppOptions override all other config sources.
+        List<KeyValuePair<string, string?>>? optionList = null;
+        if (appOptions.ApplicationName is not null)
+        {
+            (optionList ??= []).Add(new(ConfigurationDefaults.ApplicationKey, appOptions.ApplicationName));
+        }
+        if (appOptions.EnvironmentName is not null)
+        {
+            (optionList ??= []).Add(new(ConfigurationDefaults.EnvironmentKey, appOptions.EnvironmentName));
+        }
+        if (appOptions.ContentRootPath is not null)
+        {
+            (optionList ??= []).Add(new(ConfigurationDefaults.ContentRootKey, appOptions.ContentRootPath));
+        }
+        if (appOptions.WebRootPath is not null)
+        {
+            (optionList ??= []).Add(new(ConfigurationDefaults.WebRootKey, appOptions.WebRootPath));
+        }
+        if (optionList is not null)
+        {
+            configuration.AddInMemoryCollection(optionList);
+        }
+    }
+
+    internal static string ResolveContentRootPath(string? contentRootPath, string basePath)
+    {
+        if (string.IsNullOrEmpty(contentRootPath))
+        {
+            return basePath;
+        }
+        if (Path.IsPathRooted(contentRootPath))
+        {
+            return contentRootPath;
+        }
+        return Path.Combine(Path.GetFullPath(basePath), contentRootPath);
+    }
+
+    private static void ApplyDefaultAppConfiguration(IAppEnvironment env, ConfigurationManager configuration, string[]? args)
+    {
+        bool reloadOnChange = false;
+        if (configuration["reloadOnChange"] is { Length: > 0 } str)
+        {
+            bool.TryParse(str, out reloadOnChange);
+        }
+        configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: reloadOnChange)
+            .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: reloadOnChange);
+
+        configuration.AddEnvironmentVariables();
+        if (args is { Length: > 0 })
+        {
+            configuration.AddCommandLine(args);
+        }
+    }
+
+    private static void AddDefaultServices(ConfigurationManager configuration, IServiceCollection services)
+    {
+        services.AddLogging(logging =>
+        {
+            logging.AddConfiguration(configuration.GetSection("Logging"));
+            logging.AddSimpleConsole();
+
+            logging.Configure(options =>
+            {
+                options.ActivityTrackingOptions =
+                    ActivityTrackingOptions.SpanId |
+                    ActivityTrackingOptions.TraceId |
+                    ActivityTrackingOptions.ParentId;
+            });
+        });
+    }
 
     private DefaultServiceProviderFactory GetServiceProviderFactory()
     {
