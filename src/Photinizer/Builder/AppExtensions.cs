@@ -15,7 +15,9 @@ public static class AppExtensions
             return builder.Build();
         }
 
-        public static IAppBuilder CreateBuilder(string[]? args = null) => 
-            new AppBuilder(new ApplicationOptions(){ Args = args ?? [] });
+        public static IAppBuilder CreateBuilder(string[]? args = null) =>
+            CreateBuilder(new AppOptions() { Args = args ?? [] });
+
+        public static IAppBuilder CreateBuilder(AppOptions appOptions) => new AppBuilder(appOptions);
     }
 }

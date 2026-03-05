@@ -1,4 +1,7 @@
-﻿using Photinizer.Messaging;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Photinizer.Messaging;
 using Photinizer.Settings;
 using Photino.NET;
 
@@ -23,18 +26,41 @@ public class Application : IPhotinizerConfiguration
         Services = services;
         _settings = settings;
 
+        Logger = Services.GetRequiredService<ILoggerFactory>().CreateLogger(Environment.ApplicationName ?? nameof(Application));
+
         Current = this;
     }
 
     private Action<Application>? AfterStartCallback { get; set; }
 
+    /// <summary>
+    /// Gets the current application instance.
+    /// </summary>
     public static Application Current { get; private set; } = null!;
+
+    /// <summary>
+    /// The application's configured services.
+    /// </summary>
+    public IServiceProvider Services { get; } = null!;
+
+    /// <summary>
+    /// The application's configured <see cref="IConfiguration"/>.
+    /// </summary>
+    public IConfiguration Configuration => Services.GetRequiredService<IConfiguration>();
+
+    /// <summary>
+    /// The application's configured <see cref="IAppEnvironment"/>.
+    /// </summary>
+    public IAppEnvironment Environment => Services.GetRequiredService<IAppEnvironment>();
+
+    /// <summary>
+    /// The default logger for the application.
+    /// </summary>
+    public ILogger Logger { get; } = null!;
 
     private bool IsBuildMode { get; }
 
     public bool IsRunning => Volatile.Read(ref _isRunning) == 1;
-
-    public IServiceProvider Services { get; } = null!;
 
     public PhotinoWindow MainWindow
     {
@@ -58,6 +84,8 @@ public class Application : IPhotinizerConfiguration
     {
         if (IsBuildMode) { Console.WriteLine("IsBuildMode"); return; }
 
+        if (Interlocked.CompareExchange(ref _isRunning, 1, 0) == 1) { Console.WriteLine("Already running"); return; }
+
         if (OperatingSystem.IsWindows())
         {
             RunUiThread(() => RunApp(config));
@@ -70,8 +98,6 @@ public class Application : IPhotinizerConfiguration
 
     private void RunApp(Action<IPhotinizerConfiguration>? setup = null)
     {
-        if (Interlocked.CompareExchange(ref _isRunning, 1, 0) == 1) { Console.WriteLine("Already running"); return; }
-
         MainWindow = new PhotinoWindow();
         Messenger = new Messenger(MainWindow);
 
@@ -81,7 +107,7 @@ public class Application : IPhotinizerConfiguration
 
         setup?.Invoke(this);
 
-        MainWindow.Load(Path.Combine("Frontend", "wwwroot", "index.html"));
+        MainWindow.Load(Path.Combine(Environment.ContentRootPath, "wwwroot", "index.html"));
         MainWindow.WaitForClose();
     }
 

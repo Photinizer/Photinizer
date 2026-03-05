@@ -7,7 +7,7 @@ root = true
 # A newline ending every file
 # Use 4 spaces as indentation
 [*]
-insert_final_newline = true
+insert_final_newline = false
 indent_style = space
 indent_size = 4
 trim_trailing_whitespace = true
@@ -139,6 +139,9 @@ dotnet_diagnostic.IDE0071.severity = silent
 
 # IDE0031: Use null propagation - keep as silent hint to avoid build errors with TreatWarningsAsErrors
 dotnet_diagnostic.IDE0031.severity = silent
+
+#CA1806: Do not ignore method results
+dotnet_diagnostic.CA1806.severity = none
 
 # Space preferences
 csharp_space_after_cast = false
