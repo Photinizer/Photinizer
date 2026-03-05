@@ -1,6 +1,7 @@
-﻿using Photinizer.Settings;
+﻿using Photinizer.Builder;
+using Photinizer.Settings;
 
-namespace Photinizer.Builder;
+namespace Photinizer;
 
 //Bundler
 public interface IPhotinizerUI

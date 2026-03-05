@@ -1,7 +1,7 @@
 ﻿using Photinizer.Messaging;
 using Photino.NET;
 
-namespace Photinizer.Builder;
+namespace Photinizer;
 
 public interface IPhotinizerConfiguration
 {

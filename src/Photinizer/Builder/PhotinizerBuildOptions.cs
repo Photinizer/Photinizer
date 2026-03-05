@@ -8,11 +8,6 @@ public class PhotinizerBuildOptions
 
     public PhotinizerBuildOptions(string[] args)
     {
-        if (args is not { Length: > 0 })
-        {
-            args = Environment.GetCommandLineArgs();
-        }
-
         bool isBuildMode = false;
         foreach (var arg in args)
         {
