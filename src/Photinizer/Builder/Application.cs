@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Photinizer.Messaging;
 using Photinizer.Settings;
 using Photino.NET;
@@ -11,20 +12,17 @@ public class Application : IPhotinizerConfiguration
 {
     private static int s_appIsCreated;
     private int _isRunning;
-    private readonly PhotinizerSettings _settings = null!;
 
     internal Application() => IsBuildMode = true;//bundler stub
 
-    internal Application(IServiceProvider services, PhotinizerSettings settings)
+    internal Application(IServiceProvider services)
     {
         ArgumentNullException.ThrowIfNull(services);
-        ArgumentNullException.ThrowIfNull(settings);
         if (Interlocked.CompareExchange(ref s_appIsCreated, 1, 0) == 1)
         {
             throw new InvalidOperationException("Cannot create more than one Photinizer.Application instance.");
         }
         Services = services;
-        _settings = settings;
 
         Logger = Services.GetRequiredService<ILoggerFactory>().CreateLogger(Environment.ApplicationName ?? nameof(Application));
 
@@ -112,7 +110,9 @@ public class Application : IPhotinizerConfiguration
         MainWindow = new PhotinoWindow();
         Messenger = new Messenger(MainWindow);
 
-        MainWindow.UseOwnSettings(_settings);
+        var settings = Services.GetRequiredService<IOptions<PhotinizerSettings>>();
+
+        MainWindow.UseOwnSettings(settings.Value);
 
         AfterStartCallback?.Invoke(this);
 
