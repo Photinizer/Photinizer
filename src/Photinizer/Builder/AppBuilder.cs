@@ -188,18 +188,18 @@ internal sealed class AppBuilder : IAppBuilder
 
     public Application Build()
     {
-        var settings = SettingsProvider.Get();
-
         if (_buildOptions.IsBuildMode)
         {
             _ = _ui ?? throw new PhotinizerException("You must choose and set UI");
-            _ui.Build(settings, _buildOptions);
+            var settings =  Configuration.GetSection("Photinizer").Get<PhotinizerSettings>();
+            _ui.Build(settings ?? new(), _buildOptions);
             return new Application();//fallback
         }
+        Services.Configure<PhotinizerSettings>(Configuration.GetSection("Photinizer"));
 
         var appServices = GetServiceProviderFactory().CreateServiceProvider(_serviceCollection);
         _serviceCollection.MakeReadOnly();
-        var app = new Application(appServices, settings);
+        var app = new Application(appServices);
         return app;
     }
 
