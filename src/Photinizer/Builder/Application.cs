@@ -68,8 +68,7 @@ public class Application : IPhotinizerConfiguration
 
     public Messenger Messenger
     {
-        get => field ?? throw new InvalidOperationException("Messenger is not created yet."); 
-        private set;
+        get => (Messenger)Services.GetRequiredService<IMessenger>() ?? throw new InvalidOperationException("Messenger is not created yet."); 
     }
 
     internal Application AfterStart(Action<Application> callback)
@@ -108,7 +107,7 @@ public class Application : IPhotinizerConfiguration
     private void RunApp(Action<IPhotinizerConfiguration>? setup = null)
     {
         MainWindow = new PhotinoWindow();
-        Messenger = new Messenger(MainWindow);
+        Messenger.RegisterWindow(MainWindow);
 
         var settings = Services.GetRequiredService<IOptions<PhotinizerSettings>>();
 

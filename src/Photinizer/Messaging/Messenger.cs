@@ -1,167 +1,396 @@
-﻿using System.Text.Json;
-using Photinizer.Exceptions;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Text.Json;
 using Photino.NET;
 
 namespace Photinizer.Messaging;
 
-public class Messenger
+public sealed class Messenger : IMessenger
 {
-    private readonly PhotinoWindow _window;
-    private readonly Dictionary<string, RequestHandler> _handlers = [];
-    private readonly Dictionary<string, TaskCompletionSource<JsonElement>> _pendingRequests = [];
-    private static readonly JsonSerializerOptions s_deserializeOptions = new() { PropertyNameCaseInsensitive = true };
+    private readonly IMessageSerializer _serializer;
+    private readonly ConcurrentDictionary<int, PhotinoWindow> _windows = new();
 
-    public Messenger(PhotinoWindow window)
+    private readonly ConcurrentDictionary<string, MessageHandler> _messages = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, TaskHandler> _tasks = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, QueryHandler> _queries = new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly ConcurrentDictionary<string, TaskCompletionSource<JsonElement>> _pendingRequests = [];
+
+
+    public Messenger(IMessageSerializer serializer)
     {
-        ArgumentNullException.ThrowIfNull(window);
-        _window = window;
-        _window.RegisterWebMessageReceivedHandler(OnMessageReceived);
+        ArgumentNullException.ThrowIfNull(serializer);
+        _serializer = serializer;
     }
 
-    #region OnMessage
+    internal static int NewId
+    {
+        get
+        {
+            int newId;
+            do
+            {
+                newId = Interlocked.Increment(ref field);
+            } while (newId == 0);
+            return newId;
+        }
+    }
 
-    public Messenger OnMessageAsync(string endpoint, Func<JsonElement, Task> handler)
-        => AddHandler(endpoint, new(handler, NeedResponse: false));
+    public void RegisterWindow(PhotinoWindow window)
+    {
+        ArgumentNullException.ThrowIfNull(window);
 
-    public Messenger OnMessageAsync<T>(string endpoint, Func<T?, Task> handler)
-        => AddHandler(endpoint, new(el => handler(Deserialize<T>(el, endpoint)), NeedResponse: false));
+        while (!_windows.TryAdd(NewId, window))
+        {
+        }
 
-    public Messenger OnMessage(string endpoint, Action<JsonElement> handler)
-    => OnMessageAsync(endpoint, el => {
-        handler(el);
-        return Task.CompletedTask;
-    });
+        window.RegisterWebMessageReceivedHandler(OnMessageReceived);
+    }
 
-    public Messenger OnMessage<T>(string endpoint, Action<T?> handler)
-    => OnMessageAsync(endpoint, el => {
-        handler(Deserialize<T>(el, endpoint));
-        return Task.CompletedTask;
-    });
+    public void UnregisterWindow(PhotinoWindow window)
+    {
+        ArgumentNullException.ThrowIfNull(window);
+
+        var pair = _windows.FirstOrDefault(p => p.Value == window);
+        if (pair.Value is not null && _windows.TryRemove(pair.Key, out var w))
+        {
+            Debug.Assert(window == w);
+            w.WebMessageReceived -= OnMessageReceived;
+        }
+    }
+
+    #region Messages
+
+    public IMessenger OnMessage(string endpoint, Action<JsonElement> handler)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        ArgumentNullException.ThrowIfNull(handler);
+        _messages[endpoint] = new MessageHandler(handler);
+        return this;
+    }
+
+    public IMessenger OnMessage<T>(string endpoint, Action<T> handler)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        ArgumentNullException.ThrowIfNull(handler);
+        _messages[endpoint] = new MessageHandler(Handle);
+        return this;
+
+        void Handle(JsonElement el)
+        {
+            var obj = _serializer.Deserialize<T>(el, endpoint);
+            handler(obj);
+        }
+    }
+
+    public IMessenger OnMessageAsync(string endpoint, Func<JsonElement, Task> handler)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        ArgumentNullException.ThrowIfNull(handler);
+        _messages[endpoint] = new MessageHandler(AsyncHandler: handler);
+        return this;
+    }
+
+    public IMessenger OnMessageAsync<T>(string endpoint, Func<T, Task> handler)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        ArgumentNullException.ThrowIfNull(handler);
+        _messages[endpoint] = new MessageHandler(AsyncHandler: Handle);
+        return this;
+
+        Task Handle(JsonElement el)
+        {
+            var obj = _serializer.Deserialize<T>(el, endpoint);
+            return handler(obj);
+        }
+    }
 
     #endregion
 
     #region OnTask
-    public Messenger OnTaskAsync(string endpoint, Func<JsonElement, Task> handler)
-        => AddHandler(endpoint, new(handler, NeedResponse: true));
 
-    public Messenger OnTaskAsync<T>(string endpoint, Func<T?, Task> handler)
-        => AddHandler(endpoint, new(el => handler(Deserialize<T>(el, endpoint)), NeedResponse: true));
+    public IMessenger OnTask(string endpoint, Action<JsonElement> handler)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        ArgumentNullException.ThrowIfNull(handler);
+        _tasks[endpoint] = new TaskHandler(handler);
+        return this;
+    }
 
-    public Messenger OnTask(string endpoint, Action<JsonElement> handler)
-        => OnTaskAsync(endpoint, el => {
-            handler(el);
-            return Task.CompletedTask;
-        });
 
-    public Messenger OnTask<T>(string endpoint, Action<T?> handler)
-        => OnTaskAsync(endpoint, el => {
-            handler(Deserialize<T>(el, endpoint));
-            return Task.CompletedTask;
-        });
+    public IMessenger OnTask<T>(string endpoint, Action<T> handler)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        ArgumentNullException.ThrowIfNull(handler);
+        _tasks[endpoint] = new TaskHandler(Handle);
+        return this;
+
+        void Handle(JsonElement el)
+        {
+            var obj = _serializer.Deserialize<T>(el, endpoint);
+            handler(obj);
+        }
+    }
+
+    public IMessenger OnTaskAsync(string endpoint, Func<JsonElement, Task> handler)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        ArgumentNullException.ThrowIfNull(handler);
+        _tasks[endpoint] = new TaskHandler(AsyncHandler: handler);
+        return this;
+    }
+
+
+    public IMessenger OnTaskAsync<T>(string endpoint, Func<T, Task> handler)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        ArgumentNullException.ThrowIfNull(handler);
+        _tasks[endpoint] = new TaskHandler(AsyncHandler: Handle);
+        return this;
+
+        Task Handle(JsonElement el)
+        {
+            var obj = _serializer.Deserialize<T>(el, endpoint);
+            return handler(obj);
+        }
+    }
 
     #endregion
 
     #region OnQuery
-    public Messenger OnQueryAsync(string endpoint, Func<JsonElement, Task<object>> handler)
-        => AddHandler(endpoint, new(handler, NeedResponse: true));
 
-    public Messenger OnQueryAsync<T>(string endpoint, Func<T?, Task<object>> handler)
-        => AddHandler(endpoint, new(el => handler(Deserialize<T>(el, endpoint)), NeedResponse: true));
+    public IMessenger OnQuery(string endpoint, Func<JsonElement, object?> handler)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        ArgumentNullException.ThrowIfNull(handler);
+        _queries[endpoint] = new QueryHandler(handler);
+        return this;
+    }
 
-    public Messenger OnQuery(string endpoint, Func<JsonElement, object> handler)
-        => OnQueryAsync(endpoint, el => Task.FromResult(handler(el)));
+    public IMessenger OnQuery<T>(string endpoint, Func<T, object?> handler)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        ArgumentNullException.ThrowIfNull(handler);
+        _queries[endpoint] = new QueryHandler(Handle);
+        return this;
 
-    public Messenger OnQuery<T>(string endpoint, Func<T?, object> handler)
-        => OnQueryAsync(endpoint, el => Task.FromResult(handler(Deserialize<T>(el, endpoint))));
+        object? Handle(JsonElement el)
+        {
+            var obj = _serializer.Deserialize<T>(el, endpoint);
+            return handler(obj);
+        }
+    }
+
+    public IMessenger OnQueryAsync(string endpoint, Func<JsonElement, Task<object?>> handler)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        ArgumentNullException.ThrowIfNull(handler);
+        _queries[endpoint] = new QueryHandler(AsyncHandler: handler);
+        return this;
+    }
+
+    public IMessenger OnQueryAsync<T>(string endpoint, Func<T, Task<object?>> handler)
+    {
+        ArgumentNullException.ThrowIfNull(endpoint);
+        ArgumentNullException.ThrowIfNull(handler);
+        _queries[endpoint] = new QueryHandler(AsyncHandler: Handle);
+        return this;
+
+        Task<object?> Handle(JsonElement el)
+        {
+            var obj = _serializer.Deserialize<T>(el, endpoint);
+            return handler(obj);
+        }
+    }
+
+
     #endregion
 
-    public Messenger Register(INeedMessenger service)
+    public IMessenger Register(INeedMessenger service)
     {
+        ArgumentNullException.ThrowIfNull(service);
         service.IncorporateMessenger(this);
         return this;
     }
 
-
     public static StatusCode NoAnswer() => StatusCode.NO_ANSWER;
     public static StatusCode Ok() => StatusCode.OK;
 
-    private Messenger AddHandler(string endpoint, RequestHandler handler)
+    public void SendMessage(string endpoint, object data)
     {
-        _handlers[endpoint] = handler;
-        return this;
-    }
+        ArgumentNullException.ThrowIfNull(endpoint);
 
-    public async void SendMessage(string endpoint, object data)
-        => _window.SendWebMessage(JsonSerializer.Serialize(new { endpoint, requestId = Guid.NewGuid().ToString(), data }));
+        foreach (var pair in _windows)
+        {
+            var window = pair.Value;
+
+            var reqId = Guid.NewGuid().ToString();
+            var json = _serializer.Serialize(new { endpoint, requestId = reqId, data });
+
+            window.SendWebMessage(json);
+        }
+
+    }
 
     public Task SendTask(string endpoint, object data)
     {
-        var reqId = Guid.NewGuid().ToString();
-        var json = JsonSerializer.Serialize(new { endpoint, requestId = reqId, data });
-        var tcs = new TaskCompletionSource<JsonElement>();
-        _pendingRequests[reqId] = tcs;
-        _window.SendWebMessage(json);
-        return tcs.Task;
+        ArgumentNullException.ThrowIfNull(endpoint);
+
+        List<Task>? tasks = null;
+        foreach (var pair in _windows)
+        {
+            var window = pair.Value;
+
+            var reqId = Guid.NewGuid().ToString();
+            var json = _serializer.Serialize(new { endpoint, requestId = reqId, data });
+
+            var tcs = new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _pendingRequests[reqId] = tcs;
+            window.SendWebMessage(json);
+            (tasks ??= []).Add(tcs.Task);
+        }
+
+        if (tasks is not null)
+        {
+            return Task.WhenAll(tasks);
+        }
+
+        Debug.Fail("Has no tasks");
+        return Task.CompletedTask;
     }
 
     public Task<JsonElement> SendQuery(string endpoint, object data)
     {
-        var reqId = Guid.NewGuid().ToString();
-        var json = JsonSerializer.Serialize(new { endpoint, requestId = reqId, data });
-        var tcs = new TaskCompletionSource<JsonElement>();
-        _pendingRequests[reqId] = tcs;
-        _window.SendWebMessage(json);
-        return tcs.Task;
-    }
+        ArgumentNullException.ThrowIfNull(endpoint);
 
-    private static T? Deserialize<T>(JsonElement el, string endpoint)
-    {
-        try
+        List<Task<JsonElement>>? tasks = null;
+        foreach (var pair in _windows)
         {
-            return el.Deserialize<T>(s_deserializeOptions);
-        }
-        catch (Exception ex)
-        {
-            throw new PhotinizerException($"Endpoint data error: endpoint '{endpoint}' expects data of type '{typeof(T).Name}'", ex);
-        }
-    }
+            var window = pair.Value;
 
+            var reqId = Guid.NewGuid().ToString();
+            var json = _serializer.Serialize(new { endpoint, requestId = reqId, data });
+
+            var tcs = new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _pendingRequests[reqId] = tcs;
+            window.SendWebMessage(json);
+            (tasks ??= []).Add(tcs.Task);
+        }
+
+        if (tasks is not null)
+        {
+            return Task.WhenAny(tasks).Unwrap();
+        }
+
+        Debug.Fail("Has no queries");
+        return Task.FromResult(default(JsonElement));
+    }
 
     private async void OnMessageReceived(object? sender, string message)
     {
+        var window = (PhotinoWindow)sender!;
+
         string? reqId = null;
         try
         {
-            var doc = JsonDocument.Parse(message);
-            reqId = doc.RootElement.GetProperty("requestId").GetString();
-            if (string.IsNullOrEmpty(reqId)) return;
+            var msg = _serializer.Deserialize(message, MessageJsonContext.Default.MessageBase);
 
-            var endpoint = doc.RootElement.GetProperty("endpoint").GetString();
+            var endpoint = msg?.Endpoint;
             if (endpoint == null) return;
 
-            doc.RootElement.TryGetProperty("data", out var data);
+            reqId = msg?.RequestId;
+            if (string.IsNullOrEmpty(reqId)) return;
 
-            if (_handlers.TryGetValue(endpoint, out var handler))
+            if (_pendingRequests.TryRemove(reqId, out var task))
             {
-                var result = await handler.HandleFunc(data).ConfigureAwait(false);
-                if (handler.NeedResponse)
-                {
-                    var json = JsonSerializer.Serialize(new { requestId = reqId, data = result });
-                    _window.SendWebMessage(json);
-                }
+                task.SetResult(msg!.Data);
+                return;
             }
-            else if (_pendingRequests.TryGetValue(reqId, out var task))
+
+            object? result = null;
+            string? json = null;
+            var type = msg!.Type;
+            switch (type)
             {
-                _pendingRequests.Remove(reqId);
-                task.SetResult(data);
+                case MessageType.Message:
+                    await HandleMessageAsync(endpoint, msg.Data).ConfigureAwait(false);
+                    break;
+                case MessageType.Task:
+                    await ExecuteTask(endpoint, msg.Data).ConfigureAwait(false);
+                    result = StatusCode.OK;
+                    json = _serializer.Serialize(new { requestId = reqId, data = result });
+                    window.SendWebMessage(json);
+                    break;
+                case MessageType.Query:
+                    result = await ExecuteQuery(endpoint, msg.Data).ConfigureAwait(false);
+                    json = _serializer.Serialize(new { requestId = reqId, data = result });
+                    window.SendWebMessage(json);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
             }
         }
         catch (Exception ex)
         {
             if (!string.IsNullOrEmpty(reqId))
             {
-                _window.SendWebMessage(JsonSerializer.Serialize(new { requestId = reqId, error = ex.Message }));
+                var json = _serializer.Serialize(new { requestId = reqId, error = ex.Message });
+                window.SendWebMessage(json);
             }
         }
+    }
+
+    private Task HandleMessageAsync(string endpoint, JsonElement data)
+    {
+        if (!_messages.TryGetValue(endpoint, out var handler))
+        {
+            var msg = $"Can't resolve message handler for endpoint: {endpoint}";
+            Debug.Fail(msg);
+            throw new InvalidOperationException(msg);
+        }
+
+        if (handler.AsyncHandler is not null)
+        {
+            return handler.AsyncHandler!(data);
+        }
+
+        handler.Handler!(data);
+        return Task.CompletedTask;
+    }
+
+    private Task ExecuteTask(string endpoint, JsonElement data)
+    {
+        if (!_tasks.TryGetValue(endpoint, out var handler))
+        {
+            var msg = $"Can't resolve task handler for endpoint: {endpoint}";
+            Debug.Fail(msg);
+            throw new InvalidOperationException(msg);
+        }
+
+        if (handler.AsyncHandler is not null)
+        {
+            return handler.AsyncHandler!(data);
+        }
+
+        handler.Handler!(data);
+        return Task.CompletedTask;
+    }
+
+    private Task<object?> ExecuteQuery(string endpoint, JsonElement data)
+    {
+
+        if (!_queries.TryGetValue(endpoint, out var handler))
+        {
+            var msg = $"Can't resolve query handler for endpoint: {endpoint}";
+            Debug.Fail(msg);
+            throw new InvalidOperationException(msg);
+        }
+
+        if (handler.AsyncHandler is not null)
+        {
+            return handler.AsyncHandler!(data);
+        }
+
+        return Task.FromResult(handler.Handler!(data));
     }
 }

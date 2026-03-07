@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Photinizer.Exceptions;
+using Photinizer.Messaging;
 using Photinizer.Settings;
 
 namespace Photinizer.Builder;
@@ -169,6 +170,8 @@ internal sealed class AppBuilder : IAppBuilder
                     ActivityTrackingOptions.ParentId;
             });
         });
+        services.AddSingleton<IMessageSerializer, MessageSerializer>();
+        services.AddSingleton<IMessenger, Messenger>();
     }
 
     private DefaultServiceProviderFactory GetServiceProviderFactory()
