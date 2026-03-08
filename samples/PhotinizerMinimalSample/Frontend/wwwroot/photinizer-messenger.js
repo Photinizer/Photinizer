@@ -39,17 +39,18 @@ class PhotinizerMessenger {
         });
     }
 
-    message(endpoint, data = {}) { this._send(endpoint, data); }
-    async task(endpoint, data = {}) { return this._send(endpoint, data, true); }
-    async query(endpoint, data = {}) { return this._send(endpoint, data, true); }
+    message(endpoint, data = {}) { this._send(0, endpoint, data); }
+    async task(endpoint, data = {}) { return this._send(1, endpoint, data); }
+    async query(endpoint, data = {}) { return this._send(2, endpoint, data); }
 
     onMessage(endpoint, callback) { this.handlers.set(endpoint, { callback, reply: false }); }
     onTask(endpoint, callback)    { this.handlers.set(endpoint, { callback, reply: true }); }
     onQuery(endpoint, callback)   { this.handlers.set(endpoint, { callback, reply: true }); }
 
-    _send(endpoint, data, expectResponse = false) {
+    _send(type, endpoint, data) {
+        const expectResponse = type !== 0;
         const requestId = expectResponse ? crypto.randomUUID() : null;
-        const payload = { endpoint, data, requestId };
+        const payload = { type, endpoint, data, requestId };
 
         if (!expectResponse) {
             window.external.sendMessage(JSON.stringify(payload));

@@ -32,7 +32,7 @@ public static class MinimalExtensions
             return app;
         }
 
-        public Application MapQueryAsync(string endpoint, Func<JsonElement, Task<object>> handler)
+        public Application MapQueryAsync(string endpoint, Func<JsonElement, Task<object?>> handler)
         {
             ArgumentNullException.ThrowIfNull(app);
             ArgumentNullException.ThrowIfNull(handler);
@@ -41,7 +41,7 @@ public static class MinimalExtensions
             return app;
         }
 
-        public Application MapQueryAsync<T>(string endpoint, Func<T?, Task<object>> handler)
+        public Application MapQueryAsync<T>(string endpoint, Func<T?, Task<object?>> handler)
         {
             ArgumentNullException.ThrowIfNull(app);
             ArgumentNullException.ThrowIfNull(handler);
