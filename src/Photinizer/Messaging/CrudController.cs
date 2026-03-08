@@ -2,7 +2,7 @@
 
 public class CrudController<T, TId>(Crud operations, ICrudRepository<T, TId> repository) : INeedMessenger
 {
-    public void IncorporateMessenger(Messenger messenger) {
+    public void IncorporateMessenger(IMessenger messenger) {
         var entityName = typeof(T).Name;
         if (operations.HasFlag(Crud.Create)) 
             messenger.OnQueryAsync<T>($"{entityName}.create", async entity => (await repository.Create(entity!))!);

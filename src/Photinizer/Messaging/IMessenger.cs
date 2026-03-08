@@ -27,6 +27,6 @@ namespace Photinizer.Messaging
 
         void SendMessage(string endpoint, object data);
         Task SendTask(string endpoint, object data);
-        Task<JsonElement> SendQuery(string endpoint, object data);
+        Task<JsonElement[]> SendQuery(string endpoint, object data);
     }
 }
