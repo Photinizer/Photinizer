@@ -62,14 +62,11 @@ public class Application : IPhotinizerConfiguration
 
     public PhotinoWindow MainWindow
     {
-        get => field ?? throw new InvalidOperationException("MainWindow is not created yet."); 
+        get => field ?? throw new InvalidOperationException("MainWindow is not created yet.");
         private set;
     }
 
-    public IMessenger Messenger
-    {
-        get => Services.GetRequiredService<IMessenger>() ?? throw new InvalidOperationException("Messenger is not created yet."); 
-    }
+    public IMessenger Messenger => Services.GetRequiredService<IMessenger>();
 
     internal Application AfterStart(Action<Application> callback)
     {

@@ -1,8 +1,17 @@
 <Project>
+  <!-- Project properties -->
   <PropertyGroup>
     <TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>14</LangVersion>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+  <!-- NuGet -->
+  <PropertyGroup>
+    <Authors>Photinizer</Authors>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <Copyright>Copyright (c) $(Authors) $([System.DateTime]::Today.ToString(yyyy))</Copyright>
   </PropertyGroup>
 </Project>
