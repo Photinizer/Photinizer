@@ -18,11 +18,10 @@ internal static class MainWindowExtensions
             .SetSize(windowSettings.Width, windowSettings.Height)
             .SetFileSystemAccessEnabled(false);
 #if DEBUG
-        if (windowSettings is { DevToolsAlways: false, DevToolsWhenDebug: true })
-            window.SetDevToolsEnabled(true);
+        window.SetDevToolsEnabled(true);
+#else
+        window.SetDevToolsEnabled(windowSettings.DevToolsEnabled);
 #endif
-        if (windowSettings.DevToolsAlways)
-            window.SetDevToolsEnabled(true);
         if (windowSettings.Center) window.Center();
 
         return window;
