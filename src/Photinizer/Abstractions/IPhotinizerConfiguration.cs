@@ -8,7 +8,7 @@ namespace Photinizer;
 public interface IPhotinizerConfiguration
 {
     PhotinoWindow MainWindow { get; }
-    Messenger Messenger { get; }
+    IMessenger Messenger { get; }
     IServiceProvider Services { get; }
     IConfiguration Configuration { get; }
     IAppEnvironment Environment { get; }

@@ -4,7 +4,7 @@ namespace Photinizer.Template.Default.Backend.Services;
 
 internal class TimeSender : INeedMessenger
 {
-    public void IncorporateMessenger(Messenger messenger) => Task.Run(async () =>
+    public void IncorporateMessenger(IMessenger messenger) => Task.Run(async () =>
     {
         try
         {

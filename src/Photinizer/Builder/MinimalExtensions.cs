@@ -18,7 +18,6 @@ public static class MinimalExtensions
         {
             ArgumentNullException.ThrowIfNull(app);
             ArgumentNullException.ThrowIfNull(handler);
-            if (!app.IsRunning) return app.AfterStart(a => a.Messenger.OnQuery(endpoint, handler));
             app.Messenger.OnQuery(endpoint, handler);
             return app;
         }
@@ -27,7 +26,6 @@ public static class MinimalExtensions
         {
             ArgumentNullException.ThrowIfNull(app);
             ArgumentNullException.ThrowIfNull(handler);
-            if (!app.IsRunning) return app.AfterStart(a => a.Messenger.OnQuery(endpoint, handler));
             app.Messenger.OnQuery(endpoint, handler);
             return app;
         }
@@ -36,7 +34,6 @@ public static class MinimalExtensions
         {
             ArgumentNullException.ThrowIfNull(app);
             ArgumentNullException.ThrowIfNull(handler);
-            if (!app.IsRunning) return app.AfterStart(a => a.Messenger.OnQueryAsync(endpoint, handler));
             app.Messenger.OnQueryAsync(endpoint, handler);
             return app;
         }
@@ -45,7 +42,6 @@ public static class MinimalExtensions
         {
             ArgumentNullException.ThrowIfNull(app);
             ArgumentNullException.ThrowIfNull(handler);
-            if (!app.IsRunning) return app.AfterStart(a => a.Messenger.OnQueryAsync(endpoint, handler));
             app.Messenger.OnQueryAsync(endpoint, handler);
             return app;
         }
@@ -56,7 +52,6 @@ public static class MinimalExtensions
         {
             ArgumentNullException.ThrowIfNull(app);
             ArgumentNullException.ThrowIfNull(handler);
-            if (!app.IsRunning) return app.AfterStart(a => a.Messenger.OnTask(endpoint, handler));
             app.Messenger.OnTask(endpoint, handler);
             return app;
         }
@@ -65,7 +60,6 @@ public static class MinimalExtensions
         {
             ArgumentNullException.ThrowIfNull(app);
             ArgumentNullException.ThrowIfNull(handler);
-            if (!app.IsRunning) return app.AfterStart(a => a.Messenger.OnTask(endpoint, handler));
             app.Messenger.OnTask(endpoint, handler);
             return app;
         }
@@ -74,7 +68,6 @@ public static class MinimalExtensions
         {
             ArgumentNullException.ThrowIfNull(app);
             ArgumentNullException.ThrowIfNull(handler);
-            if (!app.IsRunning) return app.AfterStart(a => a.Messenger.OnTaskAsync(endpoint, handler));
             app.Messenger.OnTaskAsync(endpoint, handler);
             return app;
         }
@@ -83,7 +76,6 @@ public static class MinimalExtensions
         {
             ArgumentNullException.ThrowIfNull(app);
             ArgumentNullException.ThrowIfNull(handler);
-            if (!app.IsRunning) return app.AfterStart(a => a.Messenger.OnTaskAsync(endpoint, handler));
             app.Messenger.OnTaskAsync(endpoint, handler);
             return app;
         }
@@ -94,7 +86,6 @@ public static class MinimalExtensions
         {
             ArgumentNullException.ThrowIfNull(app);
             ArgumentNullException.ThrowIfNull(handler);
-            if (!app.IsRunning) return app.AfterStart(a => a.Messenger.OnMessage(endpoint, handler));
             app.Messenger.OnMessage(endpoint, handler);
             return app;
         }
@@ -103,7 +94,6 @@ public static class MinimalExtensions
         {
             ArgumentNullException.ThrowIfNull(app);
             ArgumentNullException.ThrowIfNull(handler);
-            if (!app.IsRunning) return app.AfterStart(a => a.Messenger.OnMessage(endpoint, handler));
             app.Messenger.OnMessage(endpoint, handler);
             return app;
         }
@@ -112,7 +102,6 @@ public static class MinimalExtensions
         {
             ArgumentNullException.ThrowIfNull(app);
             ArgumentNullException.ThrowIfNull(handler);
-            if (!app.IsRunning) return app.AfterStart(a => a.Messenger.OnMessageAsync(endpoint, handler));
             app.Messenger.OnMessageAsync(endpoint, handler);
             return app;
         }
@@ -121,7 +110,6 @@ public static class MinimalExtensions
         {
             ArgumentNullException.ThrowIfNull(app);
             ArgumentNullException.ThrowIfNull(handler);
-            if (!app.IsRunning) return app.AfterStart(a => a.Messenger.OnMessageAsync(endpoint, handler));
             app.Messenger.OnMessageAsync(endpoint, handler);
             return app;
         }
@@ -132,7 +120,6 @@ public static class MinimalExtensions
         {
             ArgumentNullException.ThrowIfNull(app);
             ArgumentNullException.ThrowIfNull(service);
-            if (!app.IsRunning) return app.AfterStart(a => a.Messenger.Register(service));
             app.Messenger.Register(service);
             return app;
         }

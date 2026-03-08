@@ -66,9 +66,9 @@ public class Application : IPhotinizerConfiguration
         private set;
     }
 
-    public Messenger Messenger
+    public IMessenger Messenger
     {
-        get => (Messenger)Services.GetRequiredService<IMessenger>() ?? throw new InvalidOperationException("Messenger is not created yet."); 
+        get => Services.GetRequiredService<IMessenger>() ?? throw new InvalidOperationException("Messenger is not created yet."); 
     }
 
     internal Application AfterStart(Action<Application> callback)

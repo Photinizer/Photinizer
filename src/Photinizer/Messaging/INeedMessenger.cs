@@ -2,5 +2,5 @@
 
 public interface INeedMessenger
 {
-    void IncorporateMessenger(Messenger messenger);
+    void IncorporateMessenger(IMessenger messenger);
 }
