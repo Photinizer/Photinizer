@@ -8,7 +8,7 @@ using Photinizer.Settings;
 
 namespace Photinizer.Builder;
 
-internal sealed class AppBuilder : IAppBuilder
+internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
 {
     private readonly PhotinizerBuildOptions _buildOptions;
     private readonly ServiceCollection _serviceCollection = new();
@@ -49,24 +49,23 @@ internal sealed class AppBuilder : IAppBuilder
         Environment = env;
         Configuration = configuration;
 
-        Logging = new LoggingBuilder(Services);
+        Logging = this;
 
         _serviceCollection.AddSingleton(_ => Environment);
-        _serviceCollection.AddSingleton<IConfiguration>( _ => Configuration);
+        _serviceCollection.AddSingleton<IConfiguration>(_ => Configuration);
         _serviceCollection.AddOptions();
         _serviceCollection.AddLogging();
     }
 
     public bool IsBuildMode => _buildOptions.IsBuildMode;
 
-
     ///<inheritdoc />
     public IAppEnvironment Environment { get; }
 
-    ///<inheritdoc />
+    ///<inheritdoc cref="IAppBuilder.Services" />
     public IServiceCollection Services => _serviceCollection;
 
-    /// <inheritdoc cref="IAppBuilder.Configuration"/>
+    ///<inheritdoc cref="IAppBuilder.Configuration"/>
     public ConfigurationManager Configuration { get; }
 
     IConfigurationManager IAppBuilder.Configuration => Configuration;
@@ -75,7 +74,6 @@ internal sealed class AppBuilder : IAppBuilder
     public ILoggingBuilder Logging { get; }
 
     public void UseUI(IPhotinizerUI ui) => _ui = ui;
-
 
     private static void SetDefaultApplicationName(AppOptions appOptions, ConfigurationManager configuration)
     {
@@ -194,7 +192,7 @@ internal sealed class AppBuilder : IAppBuilder
         if (_buildOptions.IsBuildMode)
         {
             _ = _ui ?? throw new PhotinizerException("You must choose and set UI");
-            var settings =  Configuration.GetSection("Photinizer").Get<PhotinizerSettings>();
+            var settings = Configuration.GetSection("Photinizer").Get<PhotinizerSettings>();
             _ui.Build(settings ?? new(), _buildOptions);
             return new Application();//fallback
         }
@@ -204,10 +202,5 @@ internal sealed class AppBuilder : IAppBuilder
         _serviceCollection.MakeReadOnly();
         var app = new Application(appServices);
         return app;
-    }
-
-    internal sealed class LoggingBuilder(IServiceCollection services) : ILoggingBuilder
-    {
-        public IServiceCollection Services { get; } = services;
     }
 }
