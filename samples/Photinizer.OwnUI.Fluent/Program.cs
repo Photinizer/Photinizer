@@ -8,10 +8,11 @@ Application
     .Run(config: o =>
     {
         // for example
-        o.MainWindow.SetDevToolsEnabled(true);
+        //o.MainWindow.SetDevToolsEnabled(true);
 
-        o.Messenger
-            .OnQuery("Hello, backend!", _ => "Hello, frontend!")
-            .Register(new UserController())
-            .Register(new TimeSender());
+        //o.Messenger
+        //    .OnQuery("Hello, backend!", _ => "Hello, frontend!")
+        //    .ser
+        //    .Register(new UserController())
+        //    .Register(new TimeSender());
     });

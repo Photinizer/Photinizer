@@ -1,10 +1,9 @@
-﻿using Photinizer.Messaging;
-using Photinizer.Template.Default.Backend.Entities;
-using System.Text.Json;
+﻿using System.Text.Json;
+using Photinizer.OwnUI.Minimal.Backend.Entities;
 
-namespace Photinizer.Template.Default.Backend.DataLayer;
+namespace Photinizer.OwnUI.Minimal.Backend.DataLayer;
 
-internal class CrudRepository<T> : ICrudRepository<T, int>
+internal class CrudRepository<T>
     where T : BaseEntity
 {
     private readonly string _db = "data.dat";

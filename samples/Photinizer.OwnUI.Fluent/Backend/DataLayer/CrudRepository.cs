@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace Photinizer.Template.Default.Backend.DataLayer;
 
-internal class CrudRepository<T> : ICrudRepository<T, int>
+internal class CrudRepository<T>
     where T : BaseEntity
 {
     private readonly string _db = "data.dat";

@@ -1,4 +1,4 @@
-﻿namespace Photinizer.Template.Default.Backend.Entities;
+﻿namespace Photinizer.OwnUI.Minimal.Backend.Entities;
 
 internal class User : BaseEntity
 {
