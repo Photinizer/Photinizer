@@ -3,6 +3,9 @@
     <Project Path="samples/Photinizer.OwnUI.Greetings/Photinizer.OwnUI.Greetings.csproj" DefaultStartup="true" />
     <Project Path="samples/PhotinizerMinimalSample/PhotinizerMinimalSample.csproj" Id="29146aef-299e-4ca0-a8c5-ce71407e7ad1" />
   </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Build.props" />
+  </Folder>
   <Folder Name="/UI/">
     <Project Path="src/Photinizer.Desktop/Photinizer.Desktop.csproj" Id="84da5b62-6a6b-4c94-9ea1-cca9e59eac4f" />
     <Project Path="src/Photinizer.UI.Own/Photinizer.UI.Own.csproj" Id="b0ff3fe5-52a8-42d4-92ed-ebf5ad5cf76d" />
