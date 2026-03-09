@@ -36,13 +36,7 @@ internal partial class PhotinizerOwnUI(string pathToComponents) : IPhotinizerUI
         Console.WriteLine($"build bundle file: started. BuildSource: {buildSettings.BuildSource}, pathToComponents: {pathToComponents}");
 
         var componentsPath = Path.Combine(buildSettings.BuildSource, pathToComponents);
-
-        var commonComponentsPath = Path.Combine(componentsPath, "common");
-        var userComponentsPath = Path.Combine(componentsPath, "users");
-
-        var componentFiles = Directory.GetFiles(commonComponentsPath, "*.js", SearchOption.AllDirectories)
-                      .Concat(Directory.GetFiles(userComponentsPath, "*.js", SearchOption.AllDirectories)).ToArray();
-
+        var componentFiles = Directory.GetFiles(componentsPath, "*.js", SearchOption.AllDirectories);
 
         var components = new List<Component>();
         foreach (var componentFile in componentFiles)
