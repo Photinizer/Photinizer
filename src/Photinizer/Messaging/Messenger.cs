@@ -209,13 +209,6 @@ internal sealed class Messenger : IMessenger
 
     #endregion
 
-    public IMessenger Register(INeedMessenger service)
-    {
-        ArgumentNullException.ThrowIfNull(service);
-        service.IncorporateMessenger(this);
-        return this;
-    }
-
     public static StatusCode NoAnswer() => StatusCode.NO_ANSWER;
     public static StatusCode Ok() => StatusCode.OK;
 

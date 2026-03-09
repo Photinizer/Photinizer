@@ -6,7 +6,7 @@ internal static class ComponentDependencyResolver
     {
         var sorted = new List<Component>();
         var visited = new HashSet<string>();
-        var visiting = new HashSet<string>(); // Для поиска циклов
+        var visiting = new HashSet<string>(); // For cycle detection
 
         var componentsDict = components.ToDictionary(m => m.FilePath);
 
@@ -14,7 +14,7 @@ internal static class ComponentDependencyResolver
         {
             if (visited.Contains(component.FilePath)) return;
             if (visiting.Contains(component.FilePath))
-                throw new Exception($"Обнаружена циклическая зависимость: {component.FilePath}");
+                throw new Exception($"Circular dependency detected: {component.FilePath}");
 
             visiting.Add(component.FilePath);
 

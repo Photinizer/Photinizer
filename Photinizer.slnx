@@ -1,7 +1,6 @@
 <Solution>
   <Folder Name="/Samples/">
-    <Project Path="samples/Photinizer.OwnUI.Greetings/Photinizer.OwnUI.Greetings.csproj" DefaultStartup="true" />
-    <Project Path="samples/PhotinizerMinimalSample/PhotinizerMinimalSample.csproj" Id="29146aef-299e-4ca0-a8c5-ce71407e7ad1" />
+    <Project Path="samples/Photinizer.OwnUI.Minimal/Photinizer.OwnUI.Minimal.csproj" Id="29146aef-299e-4ca0-a8c5-ce71407e7ad1" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path="Directory.Build.props" />
@@ -11,6 +10,7 @@
     <Project Path="src/Photinizer.UI.Own/Photinizer.UI.Own.csproj" Id="b0ff3fe5-52a8-42d4-92ed-ebf5ad5cf76d" />
     <Project Path="src/Photinizer.UI.VueJS/Photinizer.UI.VueJS.csproj" Id="b56ceccc-63a1-4418-a4ed-eed4e6046fed" />
   </Folder>
+  <Project Path="src/Photinizer.CRUD/Photinizer.CRUD.csproj" Id="3f0794dc-620b-4794-9b1b-470ed6e3fb7e" />
   <Project Path="src/Photinizer.SourceGenerator/Photinizer.SourceGenerator.csproj" />
   <Project Path="src/Photinizer/Photinizer.csproj" />
 </Solution>

@@ -113,15 +113,5 @@ public static class MinimalExtensions
             app.Messenger.OnMessageAsync(endpoint, handler);
             return app;
         }
-
-        // ----- Register -----
-
-        public Application Register(INeedMessenger service)
-        {
-            ArgumentNullException.ThrowIfNull(app);
-            ArgumentNullException.ThrowIfNull(service);
-            app.Messenger.Register(service);
-            return app;
-        }
     }
 }
