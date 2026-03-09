@@ -3,9 +3,9 @@ using Photino.NET;
 
 namespace Photinizer.Builder;
 
-internal static class MainWindowExtensions
+public static class MainWindowExtensions
 {
-    public static PhotinoWindow UseOwnSettings(this PhotinoWindow window, PhotinizerSettings settings)//TODO WindowSettings?
+    public static PhotinoWindow UseOwnSettings(this PhotinoWindow window, WindowConfiguration settings)
     {
         ArgumentNullException.ThrowIfNull(window);
         ArgumentNullException.ThrowIfNull(settings);
@@ -14,9 +14,10 @@ internal static class MainWindowExtensions
 
         window
             .SetTitle(settings.Title)
-            .SetUseOsDefaultSize(false)
+            .SetUseOsDefaultSize(windowSettings.UseOsDefaultSize)
             .SetSize(windowSettings.Width, windowSettings.Height)
-            .SetFileSystemAccessEnabled(false);
+            .SetUseOsDefaultLocation(windowSettings.UseOsDefaultLocation)
+            .SetFileSystemAccessEnabled(windowSettings.FileSystemAccessEnabled);
 #if DEBUG
         window.SetDevToolsEnabled(true);
 #else

@@ -6,5 +6,5 @@ namespace Photinizer;
 //Bundler
 public interface IPhotinizerUI
 {
-    public void Build(PhotinizerSettings settings, PhotinizerBuildOptions buildSettings);
+    public void Build(PhotinizerConfiguration settings, PhotinizerBuildOptions buildSettings);
 }

@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Diagnostics;
+using System.Text.RegularExpressions;
 using Photinizer.Builder;
 using Photinizer.Settings;
 
@@ -6,7 +7,7 @@ namespace Photinizer.UI.Own;
 
 internal partial class PhotinizerOwnUI(string pathToComponents) : IPhotinizerUI
 {
-    public void Build(PhotinizerSettings settings, PhotinizerBuildOptions buildSettings)
+    public void Build(PhotinizerConfiguration settings, PhotinizerBuildOptions buildSettings)
     {
         Console.WriteLine("Photinizer: Build started...");
 
@@ -16,9 +17,12 @@ internal partial class PhotinizerOwnUI(string pathToComponents) : IPhotinizerUI
         Console.WriteLine("Photinizer: Build done.");
     }
 
-    private static void BuildTemplates(PhotinizerSettings settings, PhotinizerBuildOptions buildSettings)
+    private static void BuildTemplates(PhotinizerConfiguration configuration, PhotinizerBuildOptions buildSettings)
     {
         Console.WriteLine("build templates: started");
+
+        Debug.Assert(configuration.Windows.ContainsKey("MainWindow"));
+        var settings = configuration.Windows["MainWindow"];
 
         var replacements = new Dictionary<string, string>()
         {
@@ -68,7 +72,7 @@ internal partial class PhotinizerOwnUI(string pathToComponents) : IPhotinizerUI
         return regex.Matches(content).Select(x => Path.Combine(root ?? string.Empty, $"{x.Groups["dep"]}.js")).ToList();
     }
 
-    private static void BuildTemplate(string path, Dictionary<string, string> replacements, PhotinizerSettings settings, PhotinizerBuildOptions buildSettings)
+    private static void BuildTemplate(string path, Dictionary<string, string> replacements, WindowConfiguration settings, PhotinizerBuildOptions buildSettings)
     {
         var subPath = Path.Combine("Frontend", "wwwroot", path);
         var sourcePath = Path.Combine(buildSettings.BuildSource, subPath);

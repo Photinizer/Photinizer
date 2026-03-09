@@ -8,6 +8,6 @@ namespace Photinizer.UI.VueJS;
 /// </summary>
 internal class PhotinizerVueUI : IPhotinizerUI
 {
-    public void Build(PhotinizerSettings settings, PhotinizerBuildOptions buildSettings) 
+    public void Build(PhotinizerConfiguration settings, PhotinizerBuildOptions buildSettings) 
         => throw new NotImplementedException();
 }
