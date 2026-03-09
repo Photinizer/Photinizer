@@ -74,15 +74,15 @@ public class Application : IPhotinizerConfiguration
         return this;
     }
 
-    private string ResolvePath()
+    private string ResolvePath(string source)
     {
         var webRoot = Configuration[ConfigurationDefaults.WebRootKey];
         if (!string.IsNullOrWhiteSpace((webRoot)))
         {
-            return Path.Combine(webRoot, "index.html");
+            return Path.Combine(webRoot, source);
         }
 
-        return Path.Combine(Environment.ContentRootPath, "wwwroot", "index.html");
+        return Path.Combine(Environment.ContentRootPath, "wwwroot", source);
     }
 
     public void Run(Action<IPhotinizerConfiguration>? config = null)
@@ -106,15 +106,17 @@ public class Application : IPhotinizerConfiguration
         MainWindow = new PhotinoWindow();
         Messenger.RegisterWindow(MainWindow);
 
-        var settings = Services.GetRequiredService<IOptions<PhotinizerSettings>>();
+        var configuration = Services.GetRequiredService<IOptions<PhotinizerConfiguration>>();
 
-        MainWindow.UseOwnSettings(settings.Value);
+        var settings = configuration.Value.Windows["MainWindow"];
+
+        MainWindow.UseOwnSettings(settings);
 
         AfterStartCallback?.Invoke(this);
 
         setup?.Invoke(this);
 
-        MainWindow.Load(ResolvePath());
+        MainWindow.Load(ResolvePath(settings.Source));
         MainWindow.WaitForClose();
     }
 
