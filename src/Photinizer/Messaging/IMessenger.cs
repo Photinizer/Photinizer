@@ -24,6 +24,6 @@ public interface IMessenger
     IMessenger OnQueryAsync<T>(string endpoint, Func<T, Task<object?>> handler);
 
     void SendMessage(string endpoint, object data);
-    Task SendTask(string endpoint, object data);
-    Task<JsonElement[]> SendQuery(string endpoint, object data);
+    Task SendTask(string endpoint, object data, CancellationToken cancellationToken = default);
+    Task<JsonElement[]> SendQuery(string endpoint, object data, CancellationToken cancellationToken = default);
 }

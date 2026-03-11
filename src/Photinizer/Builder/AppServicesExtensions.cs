@@ -6,29 +6,38 @@ public static class AppServicesExtensions
 {
     extension(Application application)
     {
-        public Application RunServicesAfterStart() =>
-            application.AfterStart(async app => await app.RunAllServicesAsync());
-
-        public Task RunAllServicesAsync()
+        public Application RunServicesAfterStart(Func<CancellationToken>? getCancellationToken = null)
         {
-            var runnableServices = application.Services.GetServices<IRunnableService>();
-            List<Task>? _all = null;
+            ArgumentNullException.ThrowIfNull(application);
+            return application.AfterStart(app =>
+                app.RunAllServicesAsync(getCancellationToken?.Invoke() ?? CancellationToken.None));
+        }
+    }
+
+    extension(IPhotinizerConfiguration config)
+    {
+        public Task RunAllServicesAsync(CancellationToken cancellationToken = default)
+        {
+            ArgumentNullException.ThrowIfNull(config);
+            var runnableServices = config.Services.GetServices<IRunnableService>();
+            List<Task>? all = null;
             foreach (var service in runnableServices)
             {
-                (_all ??= []).Add(service.StartAsync(default));
+                (all ??= []).Add(service.StartAsync(cancellationToken));
             }
 
-            if (_all is not null) return Task.WhenAll(_all);
+            if (all is not null) return Task.WhenAll(all);
             return Task.CompletedTask;
         }
 
-        public Task StopAllServicesAsync()
+        public Task StopAllServicesAsync(CancellationToken cancellationToken = default)
         {
-            var runnableServices = application.Services.GetServices<IRunnableService>();
+            ArgumentNullException.ThrowIfNull(config);
+            var runnableServices = config.Services.GetServices<IRunnableService>();
             List<Task>? _all = null;
             foreach (var service in runnableServices)
             {
-                (_all ??= []).Add(service.StopAsync(default));
+                (_all ??= []).Add(service.StopAsync(cancellationToken));
             }
 
             if (_all is not null) return Task.WhenAll(_all);
