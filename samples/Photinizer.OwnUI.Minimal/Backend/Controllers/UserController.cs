@@ -7,7 +7,7 @@ namespace Photinizer.OwnUI.Minimal.Backend.Controllers;
 
 internal class UserController(
     IMessenger messenger,
-    CrudRepository<User> crudRepository) : CrudController<User, int, NoFilter>(messenger), IRunnableService
+    CrudRepository<User> crudRepository) : BaseController<User>(messenger), IRunnableService
 {
     public Task StartAsync(CancellationToken cancellationToken)
     {
