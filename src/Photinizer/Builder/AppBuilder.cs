@@ -194,13 +194,24 @@ internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
             _ = _ui ?? throw new PhotinizerException("You must choose and set UI");
             var settings = Configuration.GetSection("Photinizer").Get<PhotinizerConfiguration>();
             _ui.Build(settings ?? new(), _buildOptions);
-            return new Application();//fallback
+            System.Environment.Exit(0);
+            return null;
         }
         Services.Configure<PhotinizerConfiguration>(Configuration.GetSection("Photinizer"));
 
+        if (!_userCustomizeApp) _serviceCollection.AddSingleton<Application>();
         var appServices = GetServiceProviderFactory().CreateServiceProvider(_serviceCollection);
         _serviceCollection.MakeReadOnly();
-        var app = new Application(appServices);
+        var sp = _serviceCollection.BuildServiceProvider();
+        var app = sp.GetRequiredService<Application>();
         return app;
+    }
+
+    private bool _userCustomizeApp = false;
+    public IAppBuilder UseApp<T>() where T: Application
+    {
+        _serviceCollection.AddSingleton<Application, T>();
+        _userCustomizeApp = true;
+        return this;
     }
 }

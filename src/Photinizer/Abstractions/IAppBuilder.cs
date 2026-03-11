@@ -32,4 +32,5 @@ public interface IAppBuilder
     void UseUI(IPhotinizerUI ui);
 
     Application Build();
+    IAppBuilder UseApp<T>() where T : Application;
 }

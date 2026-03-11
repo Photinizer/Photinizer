@@ -13,9 +13,9 @@ public class Application : IPhotinizerConfiguration
     private static int s_appIsCreated;
     private int _isRunning;
 
-    internal Application() => IsBuildMode = true;//bundler stub
+    //internal Application() => IsBuildMode = true;//bundler stub
 
-    internal Application(IServiceProvider services)
+    public Application(IServiceProvider services)
     {
         ArgumentNullException.ThrowIfNull(services);
         if (Interlocked.CompareExchange(ref s_appIsCreated, 1, 0) == 1)
