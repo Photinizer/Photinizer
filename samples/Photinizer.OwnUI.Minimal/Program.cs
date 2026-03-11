@@ -16,7 +16,7 @@ builder.Services.AddSampleServices();
 var app = builder.Build();
 if (builder.IsBuildMode) return;
 app.MapQuery("Hello, backend!", _ => "Hello, frontend!");
-await app.RunAllServices();
+app.RunServicesAfterStart();
 app.Run();
 
 #else
@@ -26,9 +26,9 @@ Application
         .AddOwnUI()
         .Logging.ClearProviders().AddConsole()
         .Services.AddSampleServices())
+    .RunServicesAfterStart()
     .Run(config: o =>
     {
         o.Messenger.OnQuery("Hello, backend!", _ => "Hello, frontend!");
-        // await app.RunAllServices(); /// TODO: make it work for Fluent, maybe o.UseAllServices()..
     });
 #endif

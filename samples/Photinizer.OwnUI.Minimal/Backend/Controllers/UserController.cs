@@ -1,5 +1,4 @@
-﻿using Photinizer.Abstractions;
-using Photinizer.CRUD;
+﻿using Photinizer.CRUD;
 using Photinizer.Messaging;
 using Photinizer.OwnUI.Minimal.Backend.DataLayer;
 using Photinizer.OwnUI.Minimal.Backend.Entities;
@@ -19,4 +18,6 @@ internal class UserController(
         AddDelete(crudRepository.Delete);
         return Task.CompletedTask;
     }
+
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }
