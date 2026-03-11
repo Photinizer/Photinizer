@@ -13,8 +13,6 @@ public class Application : IPhotinizerConfiguration
     private static int s_appIsCreated;
     private int _isRunning;
 
-    //internal Application() => IsBuildMode = true;//bundler stub
-
     public Application(IServiceProvider services)
     {
         ArgumentNullException.ThrowIfNull(services);
