@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Photinizer.Abstractions;
 using Photinizer.OwnUI.Minimal.Backend.Controllers;
 using Photinizer.OwnUI.Minimal.Backend.DataLayer;
 using Photinizer.OwnUI.Minimal.Backend.Services;
@@ -11,8 +10,8 @@ internal static class SericeCollectionExtensions
     extension(IServiceCollection services)
     {
         public IServiceCollection AddSampleServices() => services
-            .AddTransient(typeof(CrudRepository<>))
-            .AddTransient<IRunnableService, TimeSender>()
-            .AddTransient<IRunnableService, UserController>();
+            .AddSingleton(typeof(CrudRepository<>))
+            .AddSingleton<IRunnableService, TimeSender>()
+            .AddSingleton<IRunnableService, UserController>();
     }
 }

@@ -2,7 +2,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Photinizer.Abstractions;
 using Photinizer.Messaging;
 using Photinizer.Settings;
 using Photino.NET;
@@ -13,7 +12,6 @@ public class Application : IPhotinizerConfiguration
 {
     private static int s_appIsCreated;
     private int _isRunning;
-    CancellationTokenSource _cts = new();
 
     internal Application() => IsBuildMode = true;//bundler stub
 
@@ -86,18 +84,6 @@ public class Application : IPhotinizerConfiguration
 
         return Path.Combine(Environment.ContentRootPath, "wwwroot", source);
     }
-
-    public async Task RunAllServices()
-    {
-        var runnableServices = Services.GetServices<IRunnableService>();
-        foreach (var service in runnableServices)
-        {
-            await service.StartAsync(_cts.Token);
-        }
-    }
-
-    public async Task RunService<T>() where T : IRunnableService
-        => await Services.GetRequiredService<T>().StartAsync(_cts.Token);
 
     public void Run(Action<IPhotinizerConfiguration>? config = null)
     {

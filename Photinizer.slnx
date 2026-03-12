@@ -3,6 +3,7 @@
     <Project Path="samples/Photinizer.OwnUI.Minimal/Photinizer.OwnUI.Minimal.csproj" Id="29146aef-299e-4ca0-a8c5-ce71407e7ad1" />
   </Folder>
   <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
     <File Path="Directory.Build.props" />
   </Folder>
   <Folder Name="/UI/">

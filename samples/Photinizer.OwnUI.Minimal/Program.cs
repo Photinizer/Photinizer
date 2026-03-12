@@ -1,9 +1,14 @@
-﻿#define FLUENT_
+﻿#define FLUENT
 using Microsoft.Extensions.Logging;
 using Photinizer.Builder;
+#if !FLUENT
 using Photinizer.Desktop;
-using Photinizer.OwnUI.Minimal.Backend.Extensions;
+#else
 using Photinizer.UI.Own;
+#endif
+using Photinizer.OwnUI.Minimal.Backend.Extensions;
+
+using var cts = new CancellationTokenSource();
 
 #if !FLUENT
 // Minimal API style:
@@ -16,7 +21,7 @@ builder.Services.AddSampleServices();
 var app = builder.Build();
 if (builder.IsBuildMode) return;
 app.MapQuery("Hello, backend!", _ => "Hello, frontend!");
-await app.RunAllServices();
+app.RunServicesAfterStart(() => cts.Token);
 app.Run();
 
 #else
@@ -28,7 +33,9 @@ Application
         .Services.AddSampleServices())
     .Run(config: o =>
     {
+        o.RunAllServicesAsync(cts.Token);
         o.Messenger.OnQuery("Hello, backend!", _ => "Hello, frontend!");
-        // await app.RunAllServices(); /// TODO: make it work for Fluent, maybe o.UseAllServices()..
     });
 #endif
+
+cts.Cancel();
