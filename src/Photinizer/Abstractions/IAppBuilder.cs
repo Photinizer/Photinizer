@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Photinizer.Builder;
 
@@ -10,7 +11,7 @@ public interface IAppBuilder
     /// <summary>
     /// Provides information about the application environment.
     /// </summary>
-    IAppEnvironment Environment { get; }
+    IHostEnvironment Environment { get; }
 
     /// <summary>
     /// A collection of configuration providers for the application to compose.

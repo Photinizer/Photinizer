@@ -5,8 +5,5 @@ namespace Photinizer.OwnUI.Minimal;
 
 internal partial class App : Application
 {
-    public App(IServiceProvider services) : base(services)
-    {
-        Logger.LogInformation("App ctor");
-    }
+    public override void Initialize() => Logger.LogInformation("App initialize");
 }

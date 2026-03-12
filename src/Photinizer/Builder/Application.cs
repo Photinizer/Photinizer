@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Photinizer.Messaging;
@@ -12,20 +13,27 @@ public class Application : IPhotinizerConfiguration
 {
     private static int s_appIsCreated;
     private int _isRunning;
+    private IHost _host = null!;
 
-    public Application(IServiceProvider services)
+    public Application()
     {
-        ArgumentNullException.ThrowIfNull(services);
         if (Interlocked.CompareExchange(ref s_appIsCreated, 1, 0) == 1)
         {
             throw new InvalidOperationException("Cannot create more than one Photinizer.Application instance.");
         }
-        Services = services;
-
-        Logger = Services.GetRequiredService<ILoggerFactory>().CreateLogger(Environment.ApplicationName ?? nameof(Application));
-
         Current = this;
     }
+
+    internal void Setup(IHost host, IConfiguration configuration, IHostEnvironment environment)
+    {
+        _host = host;
+        Services = _host.Services;
+        Configuration = configuration;
+        Environment = environment;
+        Logger = Services.GetRequiredService<ILoggerFactory>().CreateLogger(Environment.ApplicationName ?? nameof(Application));
+    }
+
+    public virtual void Initialize() { }
 
     private Action<Application>? AfterStartCallback { get; set; }
 
@@ -37,22 +45,22 @@ public class Application : IPhotinizerConfiguration
     /// <summary>
     /// The application's configured services.
     /// </summary>
-    public IServiceProvider Services { get; } = null!;
+    public IServiceProvider Services { get; private set; } = null!;
 
     /// <summary>
     /// The application's configured <see cref="IConfiguration"/>.
     /// </summary>
-    public IConfiguration Configuration => Services.GetRequiredService<IConfiguration>();
+    public IConfiguration Configuration { get; private set; } = null!;
 
     /// <summary>
-    /// The application's configured <see cref="IAppEnvironment"/>.
+    /// The application's configured <see cref="IHostEnvironment"/>.
     /// </summary>
-    public IAppEnvironment Environment => Services.GetRequiredService<IAppEnvironment>();
+    public IHostEnvironment Environment { get; private set; } = null!;
 
     /// <summary>
     /// The default logger for the application.
     /// </summary>
-    public ILogger Logger { get; } = null!;
+    public ILogger Logger { get; private set; } = null!;
 
     private bool IsBuildMode { get; }
 

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Photinizer.Exceptions;
 using Photinizer.Messaging;
@@ -11,63 +12,47 @@ namespace Photinizer.Builder;
 
 internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
 {
+    private readonly HostApplicationBuilder _builder;
     private readonly PhotinizerBuildOptions _buildOptions;
-    private readonly ServiceCollection _serviceCollection = [];
     private IPhotinizerUI? _ui;
 
     internal AppBuilder(AppOptions appOptions)
     {
         ArgumentNullException.ThrowIfNull(appOptions);
+        _builder = Host.CreateApplicationBuilder(settings: new()
+        {
+            ApplicationName = appOptions.ApplicationName,
+            ContentRootPath = appOptions.ContentRootPath,
+            EnvironmentName = appOptions.EnvironmentName,
+            Args = appOptions.Args
+        });
+
         _buildOptions = new PhotinizerBuildOptions(appOptions.Args is { Length: > 0 }
             ? appOptions.Args : [.. System.Environment.GetCommandLineArgs().Skip(1)]);
 
-        var configuration = new ConfigurationManager();
+        InitializeDefaults(appOptions, Configuration, Environment);
 
-        SetDefaultApplicationName(appOptions, configuration);
-        SetDefaultContentRoot(appOptions, configuration);
-
-        InitializeDefaults(appOptions, configuration);
-
-        // Set WebRootPath if necessary
-        if (appOptions.WebRootPath is not null)
-        {
-            configuration.AddInMemoryCollection(new[]
-            {
-                new KeyValuePair<string, string?>(ConfigurationDefaults.WebRootKey, appOptions.WebRootPath),
-            });
-        }
-
-        var env = new AppEnvironment()
-        {
-            ApplicationName = appOptions.ApplicationName ?? configuration[ConfigurationDefaults.ApplicationKey] ?? string.Empty,
-            EnvironmentName = appOptions.EnvironmentName ?? configuration[ConfigurationDefaults.EnvironmentKey] ?? Environments.Production,
-            ContentRootPath = ResolveContentRootPath(appOptions.ContentRootPath ?? configuration[ConfigurationDefaults.ContentRootKey] ?? string.Empty, AppContext.BaseDirectory),
-        };
-
-        ApplyDefaultAppConfiguration(env, configuration, appOptions.Args);
-        AddDefaultServices(configuration, _serviceCollection);
-
-        Environment = env;
-        Configuration = configuration;
+        ApplyDefaultAppConfiguration(Environment, Configuration, appOptions.Args);
+        AddDefaultServices(Configuration, _builder.Services);
 
         Logging = this;
 
-        _serviceCollection.AddSingleton(_ => Environment);
-        _serviceCollection.AddSingleton<IConfiguration>(_ => Configuration);
-        _serviceCollection.AddOptions();
-        _serviceCollection.AddLogging();
+        //Services.AddSingleton(_ => Environment);
+        //Services.AddSingleton<IConfiguration>(_ => Configuration);
+        //Services.AddOptions();
+        //Services.AddLogging();
     }
 
     public bool IsBuildMode => _buildOptions.IsBuildMode;
 
     ///<inheritdoc />
-    public IAppEnvironment Environment { get; }
+    public IHostEnvironment Environment => _builder.Environment;
 
     ///<inheritdoc cref="IAppBuilder.Services" />
-    public IServiceCollection Services => _serviceCollection;
+    public IServiceCollection Services => _builder.Services;
 
     ///<inheritdoc cref="IAppBuilder.Configuration"/>
-    public ConfigurationManager Configuration { get; }
+    public ConfigurationManager Configuration => _builder.Configuration;
 
     IConfigurationManager IAppBuilder.Configuration => Configuration;
 
@@ -76,52 +61,23 @@ internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
 
     public void UseUI(IPhotinizerUI ui) => _ui = ui;
 
-    private static void SetDefaultApplicationName(AppOptions appOptions, ConfigurationManager configuration)
+    private static void InitializeDefaults(AppOptions appOptions, ConfigurationManager configuration, IHostEnvironment environment)
     {
-        if (appOptions.ApplicationName is null && configuration[ConfigurationDefaults.ApplicationKey] is null)
-        {
-            configuration.AddInMemoryCollection(new[]
-            {
-                new KeyValuePair<string, string?>(ConfigurationDefaults.ApplicationKey, Assembly.GetEntryAssembly()?.GetName().Name),
-            });
-        }
-    }
+        configuration[ConfigurationDefaults.ApplicationKey] = appOptions.ApplicationName
+            ?? Assembly.GetEntryAssembly()?.GetName().Name;
 
-    private static void SetDefaultContentRoot(AppOptions appOptions, ConfigurationManager configuration)
-    {
-        if (appOptions.ContentRootPath is null && configuration[ConfigurationDefaults.ContentRootKey] is null)
-        {
-            configuration.AddInMemoryCollection(new[]
-            {
-                new KeyValuePair<string, string?>(ConfigurationDefaults.ContentRootKey, "Frontend"),
-            });
-        }
-    }
+        configuration[ConfigurationDefaults.EnvironmentKey] = appOptions.EnvironmentName
+            ?? configuration[ConfigurationDefaults.EnvironmentKey] ?? Environments.Production;
 
-    private static void InitializeDefaults(AppOptions appOptions, ConfigurationManager configuration)
-    {
-        // AppOptions override all other config sources.
-        List<KeyValuePair<string, string?>>? optionList = null;
-        if (appOptions.ApplicationName is not null)
-        {
-            (optionList ??= []).Add(new(ConfigurationDefaults.ApplicationKey, appOptions.ApplicationName));
-        }
-        if (appOptions.EnvironmentName is not null)
-        {
-            (optionList ??= []).Add(new(ConfigurationDefaults.EnvironmentKey, appOptions.EnvironmentName));
-        }
-        if (appOptions.ContentRootPath is not null)
-        {
-            (optionList ??= []).Add(new(ConfigurationDefaults.ContentRootKey, appOptions.ContentRootPath));
-        }
-        if (appOptions.WebRootPath is not null)
-        {
-            (optionList ??= []).Add(new(ConfigurationDefaults.WebRootKey, appOptions.WebRootPath));
-        }
-        if (optionList is not null)
-        {
-            configuration.AddInMemoryCollection(optionList);
-        }
+        configuration[ConfigurationDefaults.ContentRootKey] = appOptions.ContentRootPath
+            ?? "Frontend";
+
+        configuration[ConfigurationDefaults.WebRootKey] = appOptions.WebRootPath
+            ?? Path.Combine(configuration[ConfigurationDefaults.ContentRootKey]!, "wwwroot");
+
+        environment.ApplicationName = configuration[ConfigurationDefaults.ApplicationKey]!;
+        environment.EnvironmentName = configuration[ConfigurationDefaults.EnvironmentKey]!;
+        environment.ContentRootPath = configuration[ConfigurationDefaults.ContentRootKey]!;
     }
 
     internal static string ResolveContentRootPath(string? contentRootPath, string basePath)
@@ -137,7 +93,7 @@ internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
         return Path.Combine(Path.GetFullPath(basePath), contentRootPath);
     }
 
-    private static void ApplyDefaultAppConfiguration(AppEnvironment env, ConfigurationManager configuration, string[]? args)
+    private static void ApplyDefaultAppConfiguration(IHostEnvironment env, ConfigurationManager configuration, string[]? args)
     {
         bool reloadOnChange = false;
         if (configuration["reloadOnChange"] is { Length: > 0 } str)
@@ -191,10 +147,9 @@ internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
         });
         Services.TryAddSingleton<Application, Application>();
 
-        var provider = _serviceCollection.BuildServiceProvider();
-        _serviceCollection.MakeReadOnly();
-
-        var app = provider.GetRequiredService<Application>();
+        var host = _builder.Build();
+        var app = host.Services.GetRequiredService<Application>();
+        app.Setup(host, Configuration, Environment);
         return app;
     }
 }
