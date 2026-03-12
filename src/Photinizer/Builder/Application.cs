@@ -22,7 +22,7 @@ public class Application : IPhotinizerConfiguration
         ArgumentNullException.ThrowIfNull(services);
         if (Interlocked.CompareExchange(ref s_appIsCreated, 1, 0) == 1)
         {
-            throw new InvalidOperationException("Cannot create more than one Photinizer.Application instance.");
+            throw new InvalidOperationException($"Cannot create more than one {typeof(Application).FullName} instance.");
         }
         Services = services;
 

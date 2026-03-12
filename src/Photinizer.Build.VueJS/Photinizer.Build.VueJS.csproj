@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks></TargetFrameworks>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="build\Photinizer.Build.props"   Pack="true" PackagePath="build\" Condition="Exists('build\Photinizer.Build.props')" />
+    <None Include="build\Photinizer.Build.targets" Pack="true" PackagePath="build\" />
+  </ItemGroup>
+
+</Project>

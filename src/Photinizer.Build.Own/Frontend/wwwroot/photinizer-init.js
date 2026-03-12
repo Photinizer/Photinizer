@@ -1,0 +1,1 @@
+new UI(new [[ROOT_COMPONENT]])

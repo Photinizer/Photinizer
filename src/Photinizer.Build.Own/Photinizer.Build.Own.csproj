@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <TargetFrameworks></TargetFrameworks>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="build\Photinizer.Build.Own.props"   Pack="true" PackagePath="build\" />
+    <None Include="build\Photinizer.Build.Own.targets" Pack="true" PackagePath="build\" />
+
+    <!-- re-host CLI inside this package -->
+    <None Include="$(PkgPhotinizer_Cli)\tools\net8.0\any\**\*.*"
+          Pack="true"
+          PackagePath="tools/net8.0/any" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Photinizer.Cli" Version="0.1.0">
+      <GeneratePathProperty>true</GeneratePathProperty>
+      <IncludeAssets>compile;runtime;build;native;contentfiles;analyzers;buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>

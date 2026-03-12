@@ -1,6 +1,12 @@
 <Solution>
+  <Folder Name="/Build/">
+    <Project Path="src/Photinizer.Build.Own/Photinizer.Build.Own.csproj" Id="3c92117e-2a0a-4ad2-aefe-cf5301f36b42" />
+    <Project Path="src/Photinizer.Build.VueJS/Photinizer.Build.VueJS.csproj" Id="93582c09-3cca-4c0d-af05-c71b73d5b0c0" />
+    <Project Path="src/Photinizer.Cli/Photinizer.Cli.csproj" Id="af68528b-4a02-4d65-9b53-2b936a2028bf" />
+  </Folder>
   <Folder Name="/Samples/">
-    <Project Path="samples/Photinizer.OwnUI.Minimal/Photinizer.OwnUI.Minimal.csproj" Id="29146aef-299e-4ca0-a8c5-ce71407e7ad1" />
+    <Project Path="samples/Photinizer.OwnUI.Minimal/Photinizer.OwnUI.Minimal.csproj" />
+    <Project Path="samples/Photinizer.OwnUI.MultiWindow/Photinizer.OwnUI.MultiWindow.csproj" />
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path="Directory.Build.props" />

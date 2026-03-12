@@ -1,0 +1,51 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <_PhotinizerCliToRun Condition="'$(PhotinizerCliOverride)'!=''">$(PhotinizerCliOverride)</_PhotinizerCliToRun>
+    <_PhotinizerCliToRun Condition="'$(_PhotinizerCliToRun)'=='' and '$(PhotinizerCliDll)'!=''">$(PhotinizerCliDll)</_PhotinizerCliToRun>
+    <PhotinizerCliDir>$(PkgPhotinizer_Cli)\tools\net8.0\any</PhotinizerCliDir>
+    <_PhotinizerCliToRun Condition="'$(_PhotinizerCliToRun)'=='' and '$(PhotinizerCliDir)'!=''">$(PhotinizerCliDir)\Photinizer.Cli.dll</_PhotinizerCliToRun>
+
+    <PhotinizerBundlerOut Condition="'$(PhotinizerBundlerOut)'==''">$(OutDir)Frontend\wwwroot</PhotinizerBundlerOut>
+    <PhotinizerBundlerArgs Condition="'$(PhotinizerBundlerArgs)'==''">--build-source "$(MSBuildProjectDirectory)" --out "$(PhotinizerBundlerOut)"</PhotinizerBundlerArgs>
+  </PropertyGroup>
+
+  <Target Name="Photinizer_ValidateCli"
+          BeforeTargets="Photinizer_Bundle_OnBuild;Photinizer_Bundle_OnPublish"
+          Condition="'$(PhotinizerEnableBundler)'=='true'">
+    <Message Text="Photinizer: resolved CLI = '$(_PhotinizerCliToRun)'" Importance="High" />
+    <Error Condition="'$(_PhotinizerCliToRun)'==''"
+           Text="Photinizer.Cli path is empty (no override, no transitive props, no Pkg*)." />
+    <Error Condition="!Exists('$(_PhotinizerCliToRun)')"
+           Text="Photinizer.Cli not found at: $(_PhotinizerCliToRun)" />
+  </Target>
+
+  <Target Name="Photinizer_Bundle_OnBuild"
+          AfterTargets="CopyFilesToOutputDirectory"
+          Condition="
+          '$(PhotinizerEnableBundler)'=='true' and
+          '$(PhotinizerBundleOnBuild)'=='true' and
+          '$(IsCrossTargetingBuild)'!='true' and
+          '$(DesignTimeBuild)'!='true'">
+    <MakeDir Directories="$(PhotinizerBundlerOut)" Condition="!Exists('$(PhotinizerBundlerOut)')" />
+    <Exec Command='dotnet "$(_PhotinizerCliToRun)" $(PhotinizerBundlerArgs)'
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          StandardOutputImportance="High"
+          StandardErrorImportance="High" />
+  </Target>
+
+  <Target Name="Photinizer_Bundle_OnPublish"
+          AfterTargets="CopyFilesToPublishDirectory"
+          Condition="
+          '$(PhotinizerEnableBundler)'=='true' and
+          '$(PhotinizerBundleOnPublish)'=='true' and
+          '$(IsCrossTargetingBuild)'!='true' and
+          '$(DesignTimeBuild)'!='true'">
+    <MakeDir Directories="$(PhotinizerBundlerOutPublish)" Condition="!Exists('$(PhotinizerBundlerOutPublish)')" />
+    <Exec Command='dotnet "$(_PhotinizerCliToRun)" $(PhotinizerBundlerArgsPublish)'
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          StandardOutputImportance="High"
+          StandardErrorImportance="High" />
+  </Target>
+
+</Project>

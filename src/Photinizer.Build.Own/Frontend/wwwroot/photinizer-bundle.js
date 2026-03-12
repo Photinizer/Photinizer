@@ -1,0 +1,1 @@
+/* Generated from 'frontend\components\*' folder */

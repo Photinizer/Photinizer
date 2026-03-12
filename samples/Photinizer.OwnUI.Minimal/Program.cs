@@ -19,6 +19,7 @@ app.MapQuery("Hello, backend!", _ => "Hello, frontend!");
 await app.RunAllServices();
 app.Run();
 
+
 #else
 // Fluent API Style:
 Application
