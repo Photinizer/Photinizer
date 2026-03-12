@@ -37,7 +37,7 @@ class Greetings extends Component {
         this.users.read(1).then(data => {
             this.name = data.UserName
             this.update()
-        }).catch(error => alert(error)); 
+        }); 
         api.onTask('update timer', data => this.time = data);
     }
     async hello() {
