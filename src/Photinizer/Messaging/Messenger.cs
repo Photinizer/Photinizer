@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.Json;
+using Photinizer.Builder;
 using Photino.NET;
 
 namespace Photinizer.Messaging;
@@ -15,7 +16,6 @@ internal sealed class Messenger : IMessenger
     private readonly ConcurrentDictionary<string, QueryHandler> _queries = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly ConcurrentDictionary<string, TaskCompletionSource<JsonElement>> _pendingRequests = new(StringComparer.OrdinalIgnoreCase);
-
 
     public Messenger(IMessageSerializer serializer)
     {
@@ -223,7 +223,6 @@ internal sealed class Messenger : IMessenger
             var window = pair.Value;
             window.SendWebMessage(json);
         }
-
     }
 
     public Task SendTask(string endpoint, object data, CancellationToken cancellationToken = default)
@@ -327,7 +326,6 @@ internal sealed class Messenger : IMessenger
         Debug.Fail("Has no queries");
         return Task.FromResult(Array.Empty<JsonElement>());
 
-
         static void RegisterCallback(object? state, CancellationToken ct)
         {
             var (messenger, tcs, reqId) = ((Messenger, TaskCompletionSource<JsonElement>, string))state!;
@@ -349,6 +347,8 @@ internal sealed class Messenger : IMessenger
     {
         var window = (PhotinoWindow)sender!;
 
+        window.Log($".OnMessageReceived({message})");
+
         string? reqId = null;
         try
         {
@@ -357,10 +357,10 @@ internal sealed class Messenger : IMessenger
             var endpoint = msg?.Endpoint;
             if (endpoint == null) return;
 
-            reqId = msg?.RequestId;
+            reqId = msg!.RequestId;
             if (string.IsNullOrEmpty(reqId)) return;
 
-            if (msg?.IsResponse == true)
+            if (msg.IsResponse)
             {
                 if (_pendingRequests.TryRemove(reqId, out var task))
                 {

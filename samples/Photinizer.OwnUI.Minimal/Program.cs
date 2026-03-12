@@ -36,8 +36,8 @@ Application
         .Services.AddSampleServices())
     .Run(config: o =>
     {
-        o.RunAllServicesAsync(cts.Token);
         o.Messenger.OnQuery("Hello, backend!", _ => "Hello, frontend!");
+        o.RunAllServicesAsync(cts.Token);
     });
 #endif
 
