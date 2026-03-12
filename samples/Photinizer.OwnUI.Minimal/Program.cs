@@ -1,6 +1,7 @@
-﻿#define FLUENT
+﻿#define FLUENT_
 using Microsoft.Extensions.Logging;
 using Photinizer.Builder;
+using Photinizer.OwnUI.Minimal;
 #if !FLUENT
 using Photinizer.Desktop;
 #else
@@ -14,6 +15,7 @@ using var cts = new CancellationTokenSource();
 // Minimal API style:
 var builder = Application.CreateBuilder(args);
 builder.UseOwnUI();
+builder.UseApp<App>();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Services.AddSampleServices();
@@ -29,6 +31,7 @@ app.Run();
 Application
     .Create(b => b
         .AddOwnUI()
+        .UseApp<App>()
         .Logging.ClearProviders().AddConsole()
         .Services.AddSampleServices())
     .Run(config: o =>

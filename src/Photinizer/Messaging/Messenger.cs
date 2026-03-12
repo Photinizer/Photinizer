@@ -360,10 +360,13 @@ internal sealed class Messenger : IMessenger
             reqId = msg?.RequestId;
             if (string.IsNullOrEmpty(reqId)) return;
 
-            if (_pendingRequests.TryRemove(reqId, out var task))
+            if (msg?.IsResponse == true)
             {
-                bool isSet = task.TrySetResult(msg!.Data);
-                Debug.Assert(isSet, $"Can't set result for pending request \"{reqId}\"");
+                if (_pendingRequests.TryRemove(reqId, out var task))
+                {
+                    bool isSet = task.TrySetResult(msg!.Data);
+                    Debug.Assert(isSet, $"Can't set result for pending request \"{reqId}\"");
+                }
                 return;
             }
 

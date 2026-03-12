@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Photinizer.Exceptions;
 using Photinizer.Messaging;
@@ -11,7 +12,7 @@ namespace Photinizer.Builder;
 internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
 {
     private readonly PhotinizerBuildOptions _buildOptions;
-    private readonly ServiceCollection _serviceCollection = new();
+    private readonly ServiceCollection _serviceCollection = [];
     private IPhotinizerUI? _ui;
 
     internal AppBuilder(AppOptions appOptions)
@@ -136,7 +137,7 @@ internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
         return Path.Combine(Path.GetFullPath(basePath), contentRootPath);
     }
 
-    private static void ApplyDefaultAppConfiguration(IAppEnvironment env, ConfigurationManager configuration, string[]? args)
+    private static void ApplyDefaultAppConfiguration(AppEnvironment env, ConfigurationManager configuration, string[]? args)
     {
         bool reloadOnChange = false;
         if (configuration["reloadOnChange"] is { Length: > 0 } str)
@@ -172,21 +173,6 @@ internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
         services.AddSingleton<IMessenger, Messenger>();
     }
 
-    private DefaultServiceProviderFactory GetServiceProviderFactory()
-    {
-        if (Environment.IsDevelopment())
-        {
-            return new DefaultServiceProviderFactory(
-                new ServiceProviderOptions
-                {
-                    ValidateScopes = true,
-                    ValidateOnBuild = true,
-                });
-        }
-
-        return new DefaultServiceProviderFactory();
-    }
-
     public Application Build()
     {
         if (_buildOptions.IsBuildMode)
@@ -194,13 +180,21 @@ internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
             _ = _ui ?? throw new PhotinizerException("You must choose and set UI");
             var settings = Configuration.GetSection("Photinizer").Get<PhotinizerConfiguration>();
             _ui.Build(settings ?? new(), _buildOptions);
-            return new Application();//fallback
+            System.Environment.Exit(0);
+            return null;
         }
         Services.Configure<PhotinizerConfiguration>(Configuration.GetSection("Photinizer"));
+        Services.Configure<ServiceProviderOptions>(options =>
+        {
+            options.ValidateScopes = Environment.IsDevelopment();
+            options.ValidateOnBuild = Environment.IsDevelopment();
+        });
+        Services.TryAddSingleton<Application, Application>();
 
-        var appServices = GetServiceProviderFactory().CreateServiceProvider(_serviceCollection);
+        var provider = _serviceCollection.BuildServiceProvider();
         _serviceCollection.MakeReadOnly();
-        var app = new Application(appServices);
+
+        var app = provider.GetRequiredService<Application>();
         return app;
     }
 }
