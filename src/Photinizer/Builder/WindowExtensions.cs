@@ -5,6 +5,17 @@ namespace Photinizer.Builder;
 
 public static class MainWindowExtensions
 {
+    /// <summary>
+    /// Logs a message.
+    /// </summary>
+    /// <param name="message">Log message</param>
+    public static void Log(this PhotinoWindow window, string message)
+    {
+        ArgumentNullException.ThrowIfNull(window);
+        if (window.LogVerbosity < 1) return;
+        Console.WriteLine($"Photinizer: \"{window.Title ?? "PhotinoWindow"}\"{message}");
+    }
+
     public static PhotinoWindow UseOwnSettings(this PhotinoWindow window, WindowConfiguration settings)
     {
         ArgumentNullException.ThrowIfNull(window);

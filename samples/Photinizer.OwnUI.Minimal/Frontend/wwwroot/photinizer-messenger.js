@@ -32,7 +32,7 @@ class PhotinizerMessenger {
                 }
 
                 if (endpoint && this.handlers.has(endpoint)) {
-                    this._handleInbound(packet);
+                    this._handle(packet);
                 }
             } catch (e) {
                 console.error("Photinizer Messenger Error:", e);
@@ -44,14 +44,14 @@ class PhotinizerMessenger {
     async task(endpoint, data = {}) { return this._send(this.messageTypes.TASK, endpoint, data); }
     async query(endpoint, data = {}) { return this._send(this.messageTypes.QUERY, endpoint, data); }
 
-    onMessage(endpoint, callback) { this.handlers.set(endpoint, { callback, reply: false }); }
-    onTask(endpoint, callback)    { this.handlers.set(endpoint, { callback, reply: true }); }
-    onQuery(endpoint, callback)   { this.handlers.set(endpoint, { callback, reply: true }); }
+    onMessage(endpoint, callback) { this.handlers.set(endpoint, { type: this.messageTypes.MESSAGE, callback }); }
+    onTask(endpoint, callback)    { this.handlers.set(endpoint, { type: this.messageTypes.TASK, callback }); }
+    onQuery(endpoint, callback)   { this.handlers.set(endpoint, { type: this.messageTypes.QUERY, callback }); }
 
     _send(type, endpoint, data) {
         const expectResponse = type !== this.messageTypes.MESSAGE;
         const requestId = expectResponse ? crypto.randomUUID() : null;
-        const payload = { type, endpoint, data, requestId };
+        const payload = { type, isResponse: false, endpoint, data, requestId };
 
         if (!expectResponse) {
             window.external.sendMessage(JSON.stringify(payload));
@@ -64,19 +64,21 @@ class PhotinizerMessenger {
         });
     }
 
-    async _handleInbound({ endpoint, data, requestId }) {
+    async _handle({ endpoint, data, requestId }) {
         const handler = this.handlers.get(endpoint);
         
         try {
             data = await handler.callback(data);
-            const payload = { endpoint, data, requestId };
+            const payload = { type: handler.type, isResponse: true, endpoint, data, requestId };
 
-            if (handler.reply && requestId) {
+            if (requestId && handler.type != this.messageTypes.MESSAGE) {
                 window.external.sendMessage(JSON.stringify(payload));
             }
         } catch (err) {
             if (requestId) {
                 window.external.sendMessage(JSON.stringify({
+                    type: this.messageTypes.MESSAGE,
+                    isResponse: true,
                     requestId,
                     endpoint,
                     error: err.message

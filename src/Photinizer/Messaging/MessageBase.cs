@@ -15,4 +15,5 @@ public record MessageBase
     public string Endpoint { get; init; } = null!;
     public string RequestId { get; init; } = null!;
     public JsonElement Data { get; init; }
+    public bool IsResponse { get; init; }
 }

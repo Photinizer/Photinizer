@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Text.Json;
+using Photinizer.Builder;
 using Photino.NET;
 
 namespace Photinizer.Messaging;
@@ -15,7 +16,6 @@ internal sealed class Messenger : IMessenger
     private readonly ConcurrentDictionary<string, QueryHandler> _queries = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly ConcurrentDictionary<string, TaskCompletionSource<JsonElement>> _pendingRequests = new(StringComparer.OrdinalIgnoreCase);
-
 
     public Messenger(IMessageSerializer serializer)
     {
@@ -218,32 +218,45 @@ internal sealed class Messenger : IMessenger
 
         foreach (var pair in _windows)
         {
-            var window = pair.Value;
-
             var reqId = Guid.NewGuid().ToString();
             var json = _serializer.Serialize(new { endpoint, requestId = reqId, data });
-
+            var window = pair.Value;
             window.SendWebMessage(json);
         }
-
     }
 
-    public Task SendTask(string endpoint, object data)
+    public Task SendTask(string endpoint, object data, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
+
+        if (cancellationToken.IsCancellationRequested) return Task.FromCanceled(cancellationToken);
 
         List<Task>? tasks = null;
         foreach (var pair in _windows)
         {
-            var window = pair.Value;
+            if (cancellationToken.IsCancellationRequested)
+            {
+                (tasks ??= []).Add(Task.FromCanceled(cancellationToken));
+                continue;
+            }
 
             var reqId = Guid.NewGuid().ToString();
-            var json = _serializer.Serialize(new { endpoint, requestId = reqId, data });
 
             var tcs = new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var task = tcs.Task;
+
+            if (cancellationToken.CanBeCanceled)
+            {
+                var registration = cancellationToken.UnsafeRegister(RegisterCallback, (this, tcs, reqId));
+                task.ContinueWith(_ => registration.Dispose(), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            }
+
+            (tasks ??= []).Add(task);
             _pendingRequests[reqId] = tcs;
+
+            var json = _serializer.Serialize(new { endpoint, requestId = reqId, data });
+            var window = pair.Value;
             window.SendWebMessage(json);
-            (tasks ??= []).Add(tcs.Task);
         }
 
         if (tasks is not null)
@@ -253,24 +266,56 @@ internal sealed class Messenger : IMessenger
 
         Debug.Fail("Has no tasks");
         return Task.CompletedTask;
+
+        static void RegisterCallback(object? state, CancellationToken ct)
+        {
+            var (messenger, tcs, reqId) = ((Messenger, TaskCompletionSource<JsonElement>, string))state!;
+
+            bool isSet = tcs.TrySetCanceled(ct);
+            if (!isSet)
+            {
+                var msg = $"Can't set canceled for task pending request \"{reqId}\"";
+                Debug.Fail(msg);
+                Console.WriteLine(msg);
+            }
+
+            bool result = messenger._pendingRequests.TryRemove(reqId, out var t);
+            Debug.Assert(result && tcs == t);
+        }
     }
 
-    public Task<JsonElement[]> SendQuery(string endpoint, object data)
+    public Task<JsonElement[]> SendQuery(string endpoint, object data, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
+
+        if (cancellationToken.IsCancellationRequested) return Task.FromCanceled<JsonElement[]>(cancellationToken);
 
         List<Task<JsonElement>>? tasks = null;
         foreach (var pair in _windows)
         {
-            var window = pair.Value;
+            if (cancellationToken.IsCancellationRequested)
+            {
+                (tasks ??= []).Add(Task.FromCanceled<JsonElement>(cancellationToken));
+                continue;
+            }
 
             var reqId = Guid.NewGuid().ToString();
-            var json = _serializer.Serialize(new { endpoint, requestId = reqId, data });
 
             var tcs = new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _pendingRequests[reqId] = tcs;
-            window.SendWebMessage(json);
+            var task = tcs.Task;
+
+            if (cancellationToken.CanBeCanceled)
+            {
+                var registration = cancellationToken.UnsafeRegister(RegisterCallback, (this, tcs, reqId));
+                task.ContinueWith(_ => registration.Dispose(), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            }
+
             (tasks ??= []).Add(tcs.Task);
+            _pendingRequests[reqId] = tcs;
+
+            var json = _serializer.Serialize(new { endpoint, requestId = reqId, data });
+            var window = pair.Value;
+            window.SendWebMessage(json);
         }
 
         if (tasks is not null)
@@ -280,11 +325,29 @@ internal sealed class Messenger : IMessenger
 
         Debug.Fail("Has no queries");
         return Task.FromResult(Array.Empty<JsonElement>());
+
+        static void RegisterCallback(object? state, CancellationToken ct)
+        {
+            var (messenger, tcs, reqId) = ((Messenger, TaskCompletionSource<JsonElement>, string))state!;
+
+            bool isSet = tcs.TrySetCanceled(ct);
+            if (!isSet)
+            {
+                var msg = $"Can't set canceled for query pending request \"{reqId}\"";
+                Debug.Fail(msg);
+                Console.WriteLine(msg);
+            }
+
+            bool result = messenger._pendingRequests.TryRemove(reqId, out var t);
+            Debug.Assert(result && tcs == t);
+        }
     }
 
     private async void OnMessageReceived(object? sender, string message)
     {
         var window = (PhotinoWindow)sender!;
+
+        window.Log($".OnMessageReceived({message})");
 
         string? reqId = null;
         try
@@ -294,12 +357,16 @@ internal sealed class Messenger : IMessenger
             var endpoint = msg?.Endpoint;
             if (endpoint == null) return;
 
-            reqId = msg?.RequestId;
+            reqId = msg!.RequestId;
             if (string.IsNullOrEmpty(reqId)) return;
 
-            if (_pendingRequests.TryRemove(reqId, out var task))
+            if (msg.IsResponse)
             {
-                task.SetResult(msg!.Data);
+                if (_pendingRequests.TryRemove(reqId, out var task))
+                {
+                    bool isSet = task.TrySetResult(msg!.Data);
+                    Debug.Assert(isSet, $"Can't set result for pending request \"{reqId}\"");
+                }
                 return;
             }
 
