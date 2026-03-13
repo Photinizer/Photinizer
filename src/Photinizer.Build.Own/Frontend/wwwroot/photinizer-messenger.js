@@ -16,11 +16,12 @@ class PhotinizerMessenger {
         this.pendingRequests = new Map();
         this.handlers = new Map();
         this.enableLogging = false;
+        this.messageTypes = { MESSAGE: 0, TASK: 1, QUERY: 2 };
 
         window.external.receiveMessage(rawMsg => {
             try {
                 const packet = JSON.parse(rawMsg);
-                if (this.enableLogging) console.log("Photinizer RPC:", packet);
+                if (this.enableLogging) console.log("Photinizer Messenger:", packet);
                 const { requestId, endpoint, data, error } = packet;
 
                 if (requestId && this.pendingRequests.has(requestId)) {
@@ -31,26 +32,26 @@ class PhotinizerMessenger {
                 }
 
                 if (endpoint && this.handlers.has(endpoint)) {
-                    this._handleInbound(packet);
+                    this._handle(packet);
                 }
             } catch (e) {
-                console.error("Photinizer RPC Error:", e);
+                console.error("Photinizer Messenger Error:", e);
             }
         });
     }
 
-    message(endpoint, data = {}) { this._send(0, endpoint, data); }
-    async task(endpoint, data = {}) { return this._send(1, endpoint, data); }
-    async query(endpoint, data = {}) { return this._send(2, endpoint, data); }
+    message(endpoint, data = {}) { this._send(this.messageTypes.MESSAGE, endpoint, data); }
+    async task(endpoint, data = {}) { return this._send(this.messageTypes.TASK, endpoint, data); }
+    async query(endpoint, data = {}) { return this._send(this.messageTypes.QUERY, endpoint, data); }
 
-    onMessage(endpoint, callback) { this.handlers.set(endpoint, { callback, reply: false }); }
-    onTask(endpoint, callback)    { this.handlers.set(endpoint, { callback, reply: true }); }
-    onQuery(endpoint, callback)   { this.handlers.set(endpoint, { callback, reply: true }); }
+    onMessage(endpoint, callback) { this.handlers.set(endpoint, { type: this.messageTypes.MESSAGE, callback }); }
+    onTask(endpoint, callback)    { this.handlers.set(endpoint, { type: this.messageTypes.TASK, callback }); }
+    onQuery(endpoint, callback)   { this.handlers.set(endpoint, { type: this.messageTypes.QUERY, callback }); }
 
     _send(type, endpoint, data) {
-        const expectResponse = type !== 0;
+        const expectResponse = type !== this.messageTypes.MESSAGE;
         const requestId = expectResponse ? crypto.randomUUID() : null;
-        const payload = { type, endpoint, data, requestId };
+        const payload = { type, isResponse: false, endpoint, data, requestId };
 
         if (!expectResponse) {
             window.external.sendMessage(JSON.stringify(payload));
@@ -63,19 +64,21 @@ class PhotinizerMessenger {
         });
     }
 
-    async _handleInbound({ endpoint, data, requestId }) {
+    async _handle({ endpoint, data, requestId }) {
         const handler = this.handlers.get(endpoint);
         
         try {
             data = await handler.callback(data);
-            const payload = { endpoint, data, requestId };
+            const payload = { type: handler.type, isResponse: true, endpoint, data, requestId };
 
-            if (handler.reply && requestId) {
+            if (requestId && handler.type != this.messageTypes.MESSAGE) {
                 window.external.sendMessage(JSON.stringify(payload));
             }
         } catch (err) {
             if (requestId) {
                 window.external.sendMessage(JSON.stringify({
+                    type: this.messageTypes.MESSAGE,
+                    isResponse: true,
                     requestId,
                     endpoint,
                     error: err.message

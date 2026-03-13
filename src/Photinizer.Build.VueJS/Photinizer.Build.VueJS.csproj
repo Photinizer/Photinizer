@@ -2,14 +2,33 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <TargetFrameworks></TargetFrameworks>
-    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="build\Photinizer.Build.props"   Pack="true" PackagePath="build\" Condition="Exists('build\Photinizer.Build.props')" />
-    <None Include="build\Photinizer.Build.targets" Pack="true" PackagePath="build\" />
+    <None Include="build\Photinizer.Build.VueJS.props" Pack="true" PackagePath="build\" />
+    <None Include="build\Photinizer.Build.VueJS.targets" Pack="true" PackagePath="build\" />
+    <None Include="Frontend\**\*.js" Pack="true" PackagePath="Frontend" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Photinizer.Cli" Version="0.1.0">
+      <GeneratePathProperty>true</GeneratePathProperty>
+      <IncludeAssets>compile;runtime;build;native;contentfiles;analyzers;buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <Target Name="Photinizer_AddLibRefPlaceholders" BeforeTargets="GenerateNuspec">
+    <WriteLinesToFile File="$(BaseIntermediateOutputPath)_._" Lines="" Overwrite="true" />
+  </Target>
+
+  <ItemGroup>
+    <None Include="$(BaseIntermediateOutputPath)_._"
+          Condition="Exists('$(BaseIntermediateOutputPath)_._')"
+          Pack="true" PackagePath="lib/net8.0/_._" Visible="false" />
   </ItemGroup>
 
 </Project>

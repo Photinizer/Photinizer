@@ -23,6 +23,7 @@ internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
 
         var configuration = new ConfigurationManager();
 
+        ApplyDefaultAppConfiguration(appOptions, configuration, out var environmentName);
         SetDefaultApplicationName(appOptions, configuration);
         SetDefaultContentRoot(appOptions, configuration);
 
@@ -40,11 +41,10 @@ internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
         var env = new AppEnvironment()
         {
             ApplicationName = appOptions.ApplicationName ?? configuration[ConfigurationDefaults.ApplicationKey] ?? string.Empty,
-            EnvironmentName = appOptions.EnvironmentName ?? configuration[ConfigurationDefaults.EnvironmentKey] ?? Environments.Production,
+            EnvironmentName = environmentName,
             ContentRootPath = ResolveContentRootPath(appOptions.ContentRootPath ?? configuration[ConfigurationDefaults.ContentRootKey] ?? string.Empty, AppContext.BaseDirectory),
         };
 
-        ApplyDefaultAppConfiguration(env, configuration, appOptions.Args);
         AddDefaultServices(configuration, _serviceCollection);
 
         Environment = env;
@@ -126,7 +126,7 @@ internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
 
     internal static string ResolveContentRootPath(string? contentRootPath, string basePath)
     {
-        if (string.IsNullOrEmpty(contentRootPath))
+        if (string.IsNullOrWhiteSpace(contentRootPath))
         {
             return basePath;
         }
@@ -137,20 +137,25 @@ internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
         return Path.Combine(Path.GetFullPath(basePath), contentRootPath);
     }
 
-    private static void ApplyDefaultAppConfiguration(AppEnvironment env, ConfigurationManager configuration, string[]? args)
+    private static void ApplyDefaultAppConfiguration(AppOptions appOptions, ConfigurationManager configuration, out string environmentName)
     {
         bool reloadOnChange = false;
         if (configuration["reloadOnChange"] is { Length: > 0 } str)
         {
             bool.TryParse(str, out reloadOnChange);
         }
-        configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: reloadOnChange)
-            .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: reloadOnChange);
+        configuration.AddJsonFile("appsettings.json", optional: true, reloadOnChange: reloadOnChange);
+
+        environmentName = appOptions.EnvironmentName ?? configuration[ConfigurationDefaults.EnvironmentKey] ?? Environments.Production;
+        if (!string.IsNullOrWhiteSpace(environmentName))
+        {
+            configuration.AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: reloadOnChange);
+        }
 
         configuration.AddEnvironmentVariables();
-        if (args is { Length: > 0 })
+        if (appOptions.Args is { Length: > 0 })
         {
-            configuration.AddCommandLine(args);
+            configuration.AddCommandLine(appOptions.Args);
         }
     }
 

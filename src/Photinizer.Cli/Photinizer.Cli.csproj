@@ -2,7 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
-    <TargetFrameworks></TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
@@ -23,9 +24,14 @@
     <None Include="$(OutputPath)Photinizer.Cli.runtimeconfig.json" Pack="true" PackagePath="tools/$(TargetFramework)/any" />
     <None Include="$(OutputPath)Photinizer.Cli.deps.json"         Condition="Exists('$(OutputPath)Photinizer.Cli.deps.json')" Pack="true" PackagePath="tools/$(TargetFramework)/any" />
 
-    <!-- managed dependencies copied by CopyLocalLockFileAssemblies -->
+    <!-- ensure System.CommandLine.dll is present -->
+    <None Include="$(OutputPath)System.CommandLine.dll"
+          Condition="Exists('$(OutputPath)System.CommandLine.dll')"
+          Pack="true" PackagePath="tools/$(TargetFramework)/any" />
+
+    <!-- other managed dependencies -->
     <None Include="$(OutputPath)*.dll"
-          Exclude="$(OutputPath)Photinizer.Cli.dll"
+          Exclude="$(OutputPath)Photinizer.Cli.dll;$(OutputPath)System.CommandLine.dll"
           Pack="true" PackagePath="tools/$(TargetFramework)/any" />
 
     <!-- native/runtime assets -->

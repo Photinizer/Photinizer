@@ -1,11 +1,8 @@
 ﻿using System.CommandLine;
+using Photinizer.Cli.Properties;
 
 const string CliName = "Photinizer.Cli";
-
-
-Console.WriteLine($"[{CliName}] enter");
-Console.Out.Flush();
-
+string cliAlias = $"{CliName}-{Guid.NewGuid().ToString("N").Substring(0, 6)}";
 
 var sourceOption = new Option<string>("--build-source")
 {
@@ -15,7 +12,8 @@ var sourceOption = new Option<string>("--build-source")
 
 var outOption = new Option<string?>("--out")
 {
-    Description = "Output directory for bundled artifacts (defaults to <project>/bin/<cfg>/<tfm>/wwwroot)."
+    Description = "Output directory for bundled artifacts (defaults to <project>/bin/<cfg>/<tfm>/wwwroot).",
+    Arity = ArgumentArity.ExactlyOne
 };
 
 var rootCommand = new RootCommand("Photinizer bundler CLI")
@@ -29,13 +27,13 @@ rootCommand.SetAction(parseResult =>
     var buildSource = parseResult.GetValue(sourceOption);
     if (string.IsNullOrWhiteSpace(buildSource))
     {
-        Console.WriteLine($"[{CliName}] --build-source option is required.");
+        Console.WriteLine($"[{cliAlias}] --build-source option is required.");
         return 2;
     }
     string sourceDir = Path.GetFullPath(buildSource);
     if (!Directory.Exists(sourceDir))
     {
-        Console.WriteLine($"[{CliName}] source dir does not exist: {sourceDir}");
+        Console.WriteLine($"[{cliAlias}] source dir does not exist: {sourceDir}");
         return 3;
     }
 
@@ -46,8 +44,8 @@ rootCommand.SetAction(parseResult =>
 
     Directory.CreateDirectory(outputDir);
 
-    Console.WriteLine($"[{CliName}] source = {sourceDir}");
-    Console.WriteLine($"[{CliName}] out    = {outputDir}");
+    Console.WriteLine($"[{cliAlias}] source = {sourceDir}");
+    Console.WriteLine($"[{cliAlias}] out    = {outputDir}");
     Console.Out.Flush();
 
     return 0;
@@ -55,7 +53,9 @@ rootCommand.SetAction(parseResult =>
 
 int exitCode = 1;
 
-Console.WriteLine($"[{CliName}] started");
+#if DEBUG
+Console.WriteLine($"[{cliAlias}] started.");
+#endif
 
 // Run and return exit code.
 ParseResult parseResult = rootCommand.Parse(args);
@@ -68,6 +68,13 @@ foreach (var parseError in parseResult.Errors)
     Console.Error.WriteLine(parseError.Message);
 }
 
-Console.WriteLine($"[{CliName}] finished");
+if (exitCode == 0 && Resources.ShouldGenerate())
+{
+    Console.WriteLine($"[{cliAlias}] {Resources.Generate()}");
+}
+
+#if DEBUG
+Console.WriteLine($"[{cliAlias}] finished. Exit code: {exitCode}");
+#endif
 
 return exitCode;
