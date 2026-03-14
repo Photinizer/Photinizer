@@ -11,11 +11,6 @@
   <Folder Name="/Data/">
     <Project Path="src/Photinizer.CRUD/Photinizer.CRUD.csproj" />
   </Folder>
-  <Folder Name="/UI/">
-    <Project Path="src/Photinizer.Desktop/Photinizer.Desktop.csproj" />
-    <Project Path="src/Photinizer.UI.Own/Photinizer.UI.Own.csproj" />
-    <Project Path="src/Photinizer.UI.VueJS/Photinizer.UI.VueJS.csproj" />
-  </Folder>
   <Project Path="src/Photinizer.SourceGenerator/Photinizer.SourceGenerator.csproj" />
   <Project Path="src/Photinizer/Photinizer.csproj" />
   <Folder Name="/Solution Items/">

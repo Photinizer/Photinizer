@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Photinizer.CRUD\Photinizer.CRUD.csproj" />
-    <ProjectReference Include="..\..\src\Photinizer.Desktop\Photinizer.Desktop.csproj" />
   </ItemGroup>
 
   <ItemGroup>
