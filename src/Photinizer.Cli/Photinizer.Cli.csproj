@@ -15,31 +15,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\Photinizer\Settings\PhotinizerConfiguration.cs" Link="Shared\PhotinizerConfiguration.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="System.CommandLine" Version="2.0.4" />
   </ItemGroup>
 
   <ItemGroup>
-    <!-- main -->
-    <None Include="$(OutputPath)Photinizer.Cli.dll"               Pack="true" PackagePath="tools/$(TargetFramework)/any" />
-    <None Include="$(OutputPath)Photinizer.Cli.runtimeconfig.json" Pack="true" PackagePath="tools/$(TargetFramework)/any" />
-    <None Include="$(OutputPath)Photinizer.Cli.deps.json"         Condition="Exists('$(OutputPath)Photinizer.Cli.deps.json')" Pack="true" PackagePath="tools/$(TargetFramework)/any" />
-
-    <!-- ensure System.CommandLine.dll is present -->
-    <None Include="$(OutputPath)System.CommandLine.dll"
-          Condition="Exists('$(OutputPath)System.CommandLine.dll')"
-          Pack="true" PackagePath="tools/$(TargetFramework)/any" />
-
-    <!-- other managed dependencies -->
-    <None Include="$(OutputPath)*.dll"
-          Exclude="$(OutputPath)Photinizer.Cli.dll;$(OutputPath)System.CommandLine.dll"
-          Pack="true" PackagePath="tools/$(TargetFramework)/any" />
-
-    <!-- native/runtime assets -->
-    <None Include="$(OutputPath)*.so;$(OutputPath)*.dylib"
-          Pack="true" PackagePath="tools/$(TargetFramework)/any" />
-
-    <!-- export CLI path transitively -->
     <None Include="buildTransitive\Photinizer.Cli.props" Pack="true" PackagePath="buildTransitive\" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(DesignTimeBuild)'!='true'">
+    <None Include="$(OutputPath)Photinizer.Cli.dll" Condition="Exists('$(OutputPath)Photinizer.Cli.dll')" Pack="true" PackagePath="tools/$(TargetFramework)/any" Visible="false" />
+    <None Include="$(OutputPath)Photinizer.Cli.runtimeconfig.json" Condition="Exists('$(OutputPath)Photinizer.Cli.runtimeconfig.json')" Pack="true" PackagePath="tools/$(TargetFramework)/any" Visible="false" />
+    <None Include="$(OutputPath)Photinizer.Cli.deps.json" Condition="Exists('$(OutputPath)Photinizer.Cli.deps.json')" Pack="true" PackagePath="tools/$(TargetFramework)/any" Visible="false" />
+    <None Include="$(OutputPath)*.dll" Exclude="$(OutputPath)Photinizer.Cli.dll" Pack="true" PackagePath="tools/$(TargetFramework)/any" Visible="false" />
   </ItemGroup>
 
 </Project>

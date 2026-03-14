@@ -109,7 +109,7 @@ public class Application : IPhotinizerConfiguration
         var sourcePath = ResolveSourcePath(settings.Source);
         if (!File.Exists(sourcePath))
         {
-            var msg = $"Could not find source file '{sourcePath}'";
+            var msg = $"Could not find source file '{settings.Source}'";
             Debug.Fail(msg);
             throw new FileNotFoundException(msg, sourcePath);
         }

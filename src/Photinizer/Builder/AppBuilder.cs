@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
-using Photinizer.Exceptions;
 using Photinizer.Messaging;
 using Photinizer.Settings;
 
@@ -11,15 +10,11 @@ namespace Photinizer.Builder;
 
 internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
 {
-    private readonly PhotinizerBuildOptions _buildOptions;
     private readonly ServiceCollection _serviceCollection = [];
-    private IPhotinizerUI? _ui;
 
     internal AppBuilder(AppOptions appOptions)
     {
         ArgumentNullException.ThrowIfNull(appOptions);
-        _buildOptions = new PhotinizerBuildOptions(appOptions.Args is { Length: > 0 }
-            ? appOptions.Args : [.. System.Environment.GetCommandLineArgs().Skip(1)]);
 
         var configuration = new ConfigurationManager();
 
@@ -58,8 +53,6 @@ internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
         _serviceCollection.AddLogging();
     }
 
-    public bool IsBuildMode => _buildOptions.IsBuildMode;
-
     ///<inheritdoc />
     public IAppEnvironment Environment { get; }
 
@@ -73,8 +66,6 @@ internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
 
     ///<inheritdoc />
     public ILoggingBuilder Logging { get; }
-
-    public void UseUI(IPhotinizerUI ui) => _ui = ui;
 
     private static void SetDefaultApplicationName(AppOptions appOptions, ConfigurationManager configuration)
     {
@@ -178,16 +169,9 @@ internal sealed class AppBuilder : IAppBuilder, ILoggingBuilder
         services.AddSingleton<IMessenger, Messenger>();
     }
 
+    /// <inheritdoc />
     public Application Build()
     {
-        if (_buildOptions.IsBuildMode)
-        {
-            _ = _ui ?? throw new PhotinizerException("You must choose and set UI");
-            var settings = Configuration.GetSection("Photinizer").Get<PhotinizerConfiguration>();
-            _ui.Build(settings ?? new(), _buildOptions);
-            System.Environment.Exit(0);
-            return null;
-        }
         Services.Configure<PhotinizerConfiguration>(Configuration.GetSection("Photinizer"));
         Services.Configure<ServiceProviderOptions>(options =>
         {

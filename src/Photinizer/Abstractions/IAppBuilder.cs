@@ -27,9 +27,9 @@ public interface IAppBuilder
     /// </summary>
     ILoggingBuilder Logging { get; }
 
-    bool IsBuildMode { get; }
-
-    void UseUI(IPhotinizerUI ui);
-
+    /// <summary>
+    /// Builds the Application.
+    /// </summary>
+    /// <returns>A configured Application.</returns>
     Application Build();
 }

@@ -28,12 +28,14 @@
     <PropertyGroup>
       <_OutBuild>$(PhotinizerBundlerOut)</_OutBuild>
       <_OutBuild Condition="'$(_OutBuild)'==''">$(TargetDir)$(PhotinizerContentRootPath)\wwwroot</_OutBuild>
-      <_ArgsBuild>--build-source "$(MSBuildProjectDirectory)" --out "$(_OutBuild)"</_ArgsBuild>
+      <_ArgsBuild>--build-source "$(MSBuildProjectDirectory)\$(PhotinizerContentRootPath)" --out "$(_OutBuild)"</_ArgsBuild>
       <_PkgJsRoot>$(MSBuildThisFileDirectory)..\Frontend\wwwroot\</_PkgJsRoot>
+      <_SrcWwwroot>$(MSBuildProjectDirectory)\$(PhotinizerContentRootPath)\wwwroot\</_SrcWwwroot>
     </PropertyGroup>
 
     <ItemGroup>
       <_PhotinizerPkgJs Include="$(_PkgJsRoot)**\*.js" />
+      <_PhotinizerSrcContent Include="$(_SrcWwwroot)**\*" />
     </ItemGroup>
 
     <Message Text="Photinizer: pkg JS root = '$(_PkgJsRoot)'; count = @(_PhotinizerPkgJs->Count())" Importance="High" />
@@ -44,7 +46,12 @@
     <Copy SourceFiles="@(_PhotinizerPkgJs)"
           DestinationFiles="@(_PhotinizerPkgJs->'$(_OutBuild)\%(RecursiveDir)%(Filename)%(Extension)')"
           SkipUnchangedFiles="true" />
-    <Message Text="Photinizer: copied (build) -> @(_PhotinizerPkgJs->'$(_OutBuild)\%(RecursiveDir)%(Filename)%(Extension)',' | ')" Importance="Low" />
+    <Message Text="Photinizer: copied #1 (build) -> @(_PhotinizerPkgJs->'$(_OutBuild)\%(RecursiveDir)%(Filename)%(Extension)',' | ')" Importance="Low" />
+
+    <Copy SourceFiles="@(_PhotinizerSrcContent)"
+          DestinationFiles="@(_PhotinizerSrcContent->'$(_OutBuild)\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Message Text="Photinizer: copied #2 (build) -> @(_PhotinizerSrcContent->'$(_OutBuild)\%(RecursiveDir)%(Filename)%(Extension)',' | ')" Importance="Low" />
 
     <Exec Command='dotnet "$(_PhotinizerCliToRun)" $(_ArgsBuild)'
           WorkingDirectory="$(MSBuildProjectDirectory)"
@@ -55,17 +62,23 @@
   <!-- Publish -->
   <Target Name="Photinizer_Bundle_OnPublish"
           AfterTargets="CopyFilesToPublishDirectory"
-          Condition=" '$(PhotinizerEnableBundler)'=='true' and '$(PhotinizerBundleOnPublish)'=='true' and '$(IsCrossTargetingBuild)'!='true' and '$(DesignTimeBuild)'!='true'">
+          Condition="
+          '$(PhotinizerEnableBundler)'=='true' and
+          '$(PhotinizerBundleOnPublish)'=='true' and
+          '$(IsCrossTargetingBuild)'!='true' and
+          '$(DesignTimeBuild)'!='true'">
 
     <PropertyGroup>
       <_OutPublish>$(PhotinizerBundlerOutPublish)</_OutPublish>
       <_OutPublish Condition="'$(_OutPublish)'==''">$(PublishDir)$(PhotinizerContentRootPath)\wwwroot</_OutPublish>
-      <_ArgsPublish>--build-source "$(MSBuildProjectDirectory)" --out "$(_OutPublish)"</_ArgsPublish>
+      <_ArgsPublish>--build-source "$(MSBuildProjectDirectory)\$(PhotinizerContentRootPath)" --out "$(_OutPublish)"</_ArgsPublish>
       <_PkgJsRoot>$(MSBuildThisFileDirectory)..\Frontend\wwwroot\</_PkgJsRoot>
+      <_SrcWwwroot>$(MSBuildProjectDirectory)\$(PhotinizerContentRootPath)\wwwroot\</_SrcWwwroot>
     </PropertyGroup>
 
     <ItemGroup>
       <_PhotinizerPkgJs Include="$(_PkgJsRoot)**\*.js" />
+      <_PhotinizerSrcContent Include="$(_SrcWwwroot)**\*" />
     </ItemGroup>
 
     <Message Text="Photinizer: pkg JS root = '$(_PkgJsRoot)'; count = @(_PhotinizerPkgJs->Count())" Importance="High" />
@@ -76,7 +89,12 @@
     <Copy SourceFiles="@(_PhotinizerPkgJs)"
           DestinationFiles="@(_PhotinizerPkgJs->'$(_OutPublish)\%(RecursiveDir)%(Filename)%(Extension)')"
           SkipUnchangedFiles="true" />
-    <Message Text="Photinizer: copied (publish) -> @(_PhotinizerPkgJs->'$(_OutPublish)\%(RecursiveDir)%(Filename)%(Extension)',' | ')" Importance="Low" />
+    <Message Text="Photinizer: copied #1 (publish) -> @(_PhotinizerPkgJs->'$(_OutPublish)\%(RecursiveDir)%(Filename)%(Extension)',' | ')" Importance="Low" />
+
+    <Copy SourceFiles="@(_PhotinizerSrcContent)"
+          DestinationFiles="@(_PhotinizerSrcContent->'$(_OutPublish)\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Message Text="Photinizer: copied #2 (publish) -> @(_PhotinizerSrcContent->'$(_OutPublish)\%(RecursiveDir)%(Filename)%(Extension)',' | ')" Importance="Low" />
 
     <Exec Command='dotnet "$(_PhotinizerCliToRun)" $(_ArgsPublish)'
           WorkingDirectory="$(MSBuildProjectDirectory)"

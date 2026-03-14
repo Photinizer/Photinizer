@@ -1,5 +1,8 @@
 ﻿using System.CommandLine;
+using System.Text.Json;
+using Photinizer.Cli;
 using Photinizer.Cli.Properties;
+using Photinizer.Settings;
 
 const string CliName = "Photinizer.Cli";
 string cliAlias = $"{CliName}-{Guid.NewGuid().ToString("N").Substring(0, 6)}";
@@ -44,8 +47,18 @@ rootCommand.SetAction(parseResult =>
 
     Directory.CreateDirectory(outputDir);
 
-    Console.WriteLine($"[{cliAlias}] source = {sourceDir}");
-    Console.WriteLine($"[{cliAlias}] out    = {outputDir}");
+    Console.WriteLine($"[{cliAlias}] source      = {sourceDir}");
+    Console.WriteLine($"[{cliAlias}] out         = {outputDir}");
+
+    var appsettings = ResolveAppSettingsPath(outputDir);
+    Console.WriteLine($"[{cliAlias}] appsettings = {appsettings}");
+
+    var config = LoadPhotinizer(File.ReadAllText(appsettings));
+
+    var bundler = new Bundler(config, cliAlias, sourceDir, outputDir);
+    bundler.BuildTemplates();
+    bundler.CreateBundleFile();
+
     Console.Out.Flush();
 
     return 0;
@@ -78,3 +91,29 @@ Console.WriteLine($"[{cliAlias}] finished. Exit code: {exitCode}");
 #endif
 
 return exitCode;
+
+static string ResolveAppSettingsPath(string outputDir)
+{
+    // outputDir/.. /.. /appsettings.json
+    var path = Path.GetFullPath(Path.Combine(outputDir, "..", "..", "appsettings.json"));
+    if (!File.Exists(path))
+        throw new FileNotFoundException("appsettings.json not found.", path);
+    return path;
+}
+
+static PhotinizerConfiguration LoadPhotinizer(string json)
+{
+    using var doc = JsonDocument.Parse(json);
+    var root = doc.RootElement;
+
+    if (!root.TryGetProperty("Photinizer", out var photinizer))
+        throw new InvalidOperationException("'Photinizer' section not found.");
+
+    var options = new JsonSerializerOptions
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
+    return photinizer.Deserialize<PhotinizerConfiguration>(options)
+           ?? throw new InvalidOperationException("Failed to deserialize Photinizer section.");
+}
