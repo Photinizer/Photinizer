@@ -1,0 +1,6 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PhotinizerCliToolsDir>$(MSBuildThisFileDirectory)..\tools\net8.0\any</PhotinizerCliToolsDir>
+    <PhotinizerCliDll>$(PhotinizerCliToolsDir)\Photinizer.Cli.dll</PhotinizerCliDll>
+  </PropertyGroup>
+</Project>

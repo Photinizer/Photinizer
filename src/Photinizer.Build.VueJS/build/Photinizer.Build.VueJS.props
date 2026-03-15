@@ -1,0 +1,12 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PhotinizerEnableBundler Condition="'$(PhotinizerEnableBundler)'==''">true</PhotinizerEnableBundler>
+    <PhotinizerBundleOnBuild Condition="'$(PhotinizerBundleOnBuild)'==''">true</PhotinizerBundleOnBuild>
+    <PhotinizerBundleOnPublish Condition="'$(PhotinizerBundleOnPublish)'==''">false</PhotinizerBundleOnPublish>
+    <PhotinizerContentRootPath Condition="'$(PhotinizerContentRootPath)'==''">Frontend</PhotinizerContentRootPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Include="$(MSBuildProjectDirectory)\$(PhotinizerContentRootPath)\**\*" />
+  </ItemGroup>
+</Project>

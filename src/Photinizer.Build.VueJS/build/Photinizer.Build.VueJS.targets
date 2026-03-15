@@ -1,0 +1,87 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <_PhotinizerCliToRun Condition="'$(PhotinizerCliOverride)'!=''">$(PhotinizerCliOverride)</_PhotinizerCliToRun>
+    <_PhotinizerCliToRun Condition="'$(_PhotinizerCliToRun)'=='' and '$(PhotinizerCliDll)'!=''">$(PhotinizerCliDll)</_PhotinizerCliToRun>
+    <_PhotinizerCliToRun Condition="'$(_PhotinizerCliToRun)'=='' and '$(PkgPhotinizer_Cli)'!=''">$(PkgPhotinizer_Cli)\tools\net8.0\any\Photinizer.Cli.dll</_PhotinizerCliToRun>
+  </PropertyGroup>
+
+  <Target Name="Photinizer_ValidateCli"
+          BeforeTargets="Photinizer_Bundle_OnBuild;Photinizer_Bundle_OnPublish"
+          Condition="'$(PhotinizerEnableBundler)'=='true'">
+    <Message Text="Photinizer: resolved CLI = '$(_PhotinizerCliToRun)'" Importance="High" />
+    <Error Condition="'$(_PhotinizerCliToRun)'==''"
+           Text="Photinizer.Cli path is empty (no override, no transitive props, no Pkg*)." />
+    <Error Condition="!Exists('$(_PhotinizerCliToRun)')"
+           Text="Photinizer.Cli not found at: $(_PhotinizerCliToRun)" />
+  </Target>
+
+  <!-- Build -->
+  <Target Name="Photinizer_Bundle_OnBuild"
+          AfterTargets="CopyFilesToOutputDirectory"
+          Condition="
+          '$(PhotinizerEnableBundler)'=='true' and
+          '$(PhotinizerBundleOnBuild)'=='true' and
+          '$(IsCrossTargetingBuild)'!='true' and
+          '$(DesignTimeBuild)'!='true'">
+
+    <PropertyGroup>
+      <_OutBuild>$(PhotinizerBundlerOut)</_OutBuild>
+      <_OutBuild Condition="'$(_OutBuild)'==''">$(TargetDir)$(PhotinizerContentRootPath)\wwwroot</_OutBuild>
+      <_ArgsBuild>--build-source "$(MSBuildProjectDirectory)" --out "$(_OutBuild)"</_ArgsBuild>
+      <_PkgJsRoot>$(MSBuildThisFileDirectory)..\Frontend\wwwroot\</_PkgJsRoot>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_PhotinizerPkgJs Include="$(_PkgJsRoot)**\*.js" />
+    </ItemGroup>
+
+    <Message Text="Photinizer: pkg JS root = '$(_PkgJsRoot)'; count = @(_PhotinizerPkgJs->Count())" Importance="High" />
+    <Message Text="Photinizer: copy build -> '$(_OutBuild)'" Importance="High" />
+
+    <MakeDir Directories="$(_OutBuild)" Condition="!Exists('$(_OutBuild)')" />
+
+    <Copy SourceFiles="@(_PhotinizerPkgJs)"
+          DestinationFiles="@(_PhotinizerPkgJs->'$(_OutBuild)\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Message Text="Photinizer: copied (build) -> @(_PhotinizerPkgJs->'$(_OutBuild)\%(RecursiveDir)%(Filename)%(Extension)',' | ')" Importance="Low" />
+
+    <Exec Command='dotnet "$(_PhotinizerCliToRun)" $(_ArgsBuild)'
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          StandardOutputImportance="High"
+          StandardErrorImportance="High" />
+  </Target>
+
+  <!-- Publish -->
+  <Target Name="Photinizer_Bundle_OnPublish"
+          AfterTargets="CopyFilesToPublishDirectory"
+          Condition=" '$(PhotinizerEnableBundler)'=='true' and '$(PhotinizerBundleOnPublish)'=='true' and '$(IsCrossTargetingBuild)'!='true' and '$(DesignTimeBuild)'!='true'">
+
+    <PropertyGroup>
+      <_OutPublish>$(PhotinizerBundlerOutPublish)</_OutPublish>
+      <_OutPublish Condition="'$(_OutPublish)'==''">$(PublishDir)$(PhotinizerContentRootPath)\wwwroot</_OutPublish>
+      <_ArgsPublish>--build-source "$(MSBuildProjectDirectory)" --out "$(_OutPublish)"</_ArgsPublish>
+      <_PkgJsRoot>$(MSBuildThisFileDirectory)..\Frontend\wwwroot\</_PkgJsRoot>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_PhotinizerPkgJs Include="$(_PkgJsRoot)**\*.js" />
+    </ItemGroup>
+
+    <Message Text="Photinizer: pkg JS root = '$(_PkgJsRoot)'; count = @(_PhotinizerPkgJs->Count())" Importance="High" />
+    <Message Text="Photinizer: copy publish -> '$(_OutPublish)'" Importance="High" />
+
+    <MakeDir Directories="$(_OutPublish)" Condition="!Exists('$(_OutPublish)')" />
+
+    <Copy SourceFiles="@(_PhotinizerPkgJs)"
+          DestinationFiles="@(_PhotinizerPkgJs->'$(_OutPublish)\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+    <Message Text="Photinizer: copied (publish) -> @(_PhotinizerPkgJs->'$(_OutPublish)\%(RecursiveDir)%(Filename)%(Extension)',' | ')" Importance="Low" />
+
+    <Exec Command='dotnet "$(_PhotinizerCliToRun)" $(_ArgsPublish)'
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          StandardOutputImportance="High"
+          StandardErrorImportance="High" />
+  </Target>
+
+</Project>

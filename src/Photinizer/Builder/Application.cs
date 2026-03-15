@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.Diagnostics;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -18,7 +19,7 @@ public class Application : IPhotinizerConfiguration
         ArgumentNullException.ThrowIfNull(services);
         if (Interlocked.CompareExchange(ref s_appIsCreated, 1, 0) == 1)
         {
-            throw new InvalidOperationException("Cannot create more than one Photinizer.Application instance.");
+            throw new InvalidOperationException($"Cannot create more than one {typeof(Application).FullName} instance.");
         }
         Services = services;
 
@@ -37,7 +38,7 @@ public class Application : IPhotinizerConfiguration
     /// <summary>
     /// The application's configured services.
     /// </summary>
-    public IServiceProvider Services { get; } = null!;
+    public IServiceProvider Services { get; }
 
     /// <summary>
     /// The application's configured <see cref="IConfiguration"/>.
@@ -52,9 +53,9 @@ public class Application : IPhotinizerConfiguration
     /// <summary>
     /// The default logger for the application.
     /// </summary>
-    public ILogger Logger { get; } = null!;
+    public ILogger Logger { get; }
 
-    private bool IsBuildMode { get; }
+    public PhotinizerConfiguration PhotinizerConfiguration => Services.GetRequiredService<IOptions<PhotinizerConfiguration>>().Value;
 
     public bool IsRunning => Volatile.Read(ref _isRunning) == 1;
 
@@ -72,21 +73,10 @@ public class Application : IPhotinizerConfiguration
         return this;
     }
 
-    private string ResolvePath(string source)
-    {
-        var webRoot = Configuration[ConfigurationDefaults.WebRootKey];
-        if (!string.IsNullOrWhiteSpace((webRoot)))
-        {
-            return Path.Combine(webRoot, source);
-        }
 
-        return Path.Combine(Environment.ContentRootPath, "wwwroot", source);
-    }
 
     public void Run(Action<IPhotinizerConfiguration>? config = null)
     {
-        if (IsBuildMode) { Console.WriteLine("IsBuildMode"); return; }
-
         if (Interlocked.CompareExchange(ref _isRunning, 1, 0) == 1) { Console.WriteLine("Already running"); return; }
 
         if (OperatingSystem.IsWindows())
@@ -102,19 +92,23 @@ public class Application : IPhotinizerConfiguration
     private void RunApp(Action<IPhotinizerConfiguration>? setup = null)
     {
         MainWindow = new PhotinoWindow();
-        Messenger.RegisterWindow(MainWindow);
 
-        var configuration = Services.GetRequiredService<IOptions<PhotinizerConfiguration>>();
-
-        var settings = configuration.Value.Windows["MainWindow"];
-
+        var settings = PhotinizerConfiguration.ResolveMainWindowConfiguration();
         MainWindow.UseOwnSettings(settings);
 
-        AfterStartCallback?.Invoke(this);
+        var sourcePath = this.ResolveSourcePath(settings.Source);
+        if (!File.Exists(sourcePath))
+        {
+            var msg = $"Could not find source file '{settings.Source}'";
+            Debug.Fail(msg);
+            throw new FileNotFoundException(msg, sourcePath);
+        }
+        MainWindow.Load(sourcePath);
 
+        AfterStartCallback?.Invoke(this);
         setup?.Invoke(this);
 
-        MainWindow.Load(ResolvePath(settings.Source));
+        Messenger.RegisterWindow(MainWindow);
         MainWindow.WaitForClose();
     }
 

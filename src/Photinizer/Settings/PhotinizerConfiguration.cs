@@ -2,7 +2,7 @@
 
 public record PhotinizerConfiguration
 {
-    public Dictionary<string, WindowConfiguration> Windows { get; set; } = new();
+    public Dictionary<string, WindowConfiguration> Windows { get; set; } = [];
 }
 
 public record WindowConfiguration

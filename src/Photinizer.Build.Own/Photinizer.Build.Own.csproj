@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="build\Photinizer.Build.Own.props" Pack="true" PackagePath="build\" />
+    <None Include="build\Photinizer.Build.Own.targets" Pack="true" PackagePath="build\" />
+    <None Include="Frontend\**\*.js" Pack="true" PackagePath="Frontend" />
+    <None Update="Frontend\wwwroot\photinizer-bundle.js" Pack="false" />
+    <None Update="Frontend\wwwroot\photinizer-init.js"  Pack="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Photinizer.Cli" Version="0.1.0">
+      <GeneratePathProperty>true</GeneratePathProperty>
+      <IncludeAssets>compile;runtime;build;native;contentfiles;analyzers;buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <Target Name="Photinizer_AddLibPlaceholders" BeforeTargets="GenerateNuspec">
+    <WriteLinesToFile File="$(BaseIntermediateOutputPath)_._" Lines="" Overwrite="true" />
+  </Target>
+
+  <ItemGroup Condition="'$(DesignTimeBuild)'!='true'">
+    <None Include="$(BaseIntermediateOutputPath)_._"
+          Condition="Exists('$(BaseIntermediateOutputPath)_._')"
+          Pack="true" PackagePath="lib/$(TargetFramework)/_._" Visible="false" />
+  </ItemGroup>
+
+</Project>

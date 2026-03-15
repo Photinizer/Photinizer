@@ -2,36 +2,21 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <TargetFrameworks>net10.0;net9.0;net8.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Photinizer.CRUD\Photinizer.CRUD.csproj" />
-    <ProjectReference Include="..\..\src\Photinizer.Desktop\Photinizer.Desktop.csproj" />
+    <PackageReference Include="Photinizer.Build.Own" Version="0.1.0" />
   </ItemGroup>
 
-  <Target Name="PreparationStep" AfterTargets="Build" Condition="'$(IsCrossTargetingBuild)' != 'true'">
-    <PropertyGroup>
-      <PrepCommand>dotnet "$(TargetPath)" --build-source "$(MSBuildProjectDirectory)"</PrepCommand>
-    </PropertyGroup>
-
-    <Message Text="Running photinization: $(PrepCommand)" Importance="high" />
-    <Exec Command="$(PrepCommand)" WorkingDirectory="$(MSBuildProjectDirectory)" StandardOutputImportance="high" />
-  </Target>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Photinizer.CRUD\Photinizer.CRUD.csproj" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Update="appsettings.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Frontend\wwwroot\css\styles.css">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Frontend\wwwroot\photinizer-messenger.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Frontend\wwwroot\photinizer-ui.js">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Frontend\wwwroot\index.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
