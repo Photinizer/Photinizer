@@ -61,7 +61,7 @@ internal sealed class Messenger : IMessenger
 
     #region Messages
 
-    public IMessenger OnMessage(string endpoint, Action<JsonElement> handler)
+    public IMessenger OnMessage(string endpoint, Action<PhotinoWindow, JsonElement> handler)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
         ArgumentNullException.ThrowIfNull(handler);
@@ -69,22 +69,22 @@ internal sealed class Messenger : IMessenger
         return this;
     }
 
-    public IMessenger OnMessage<T>(string endpoint, Action<T> handler)
+    public IMessenger OnMessage<T>(string endpoint, Action<PhotinoWindow, T> handler)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
         ArgumentNullException.ThrowIfNull(handler);
         _messages[endpoint] = new MessageHandler(HandlerType.StaticHandler, StaticHandler: Handle, State: handler);
         return this;
 
-        static void Handle(JsonElement el, IMessageSerializer serializer, string endpoint, object state)
+        static void Handle(PhotinoWindow w, JsonElement el, IMessageSerializer serializer, string endpoint, object state)
         {
             var obj = serializer.Deserialize<T>(el, endpoint);
-            var handler = (Action<T>)state;
-            handler(obj);
+            var handler = (Action<PhotinoWindow, T>)state;
+            handler(w, obj);
         }
     }
 
-    public IMessenger OnMessageAsync(string endpoint, Func<JsonElement, Task> handler)
+    public IMessenger OnMessageAsync(string endpoint, Func<PhotinoWindow, JsonElement, Task> handler)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
         ArgumentNullException.ThrowIfNull(handler);
@@ -92,18 +92,18 @@ internal sealed class Messenger : IMessenger
         return this;
     }
 
-    public IMessenger OnMessageAsync<T>(string endpoint, Func<T, Task> handler)
+    public IMessenger OnMessageAsync<T>(string endpoint, Func<PhotinoWindow, T, Task> handler)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
         ArgumentNullException.ThrowIfNull(handler);
         _messages[endpoint] = new MessageHandler(HandlerType.StaticAsyncHandler, StaticAsyncHandler: Handle, State: handler);
         return this;
 
-        static Task Handle(JsonElement el, IMessageSerializer serializer, string endpoint, object state)
+        static Task Handle(PhotinoWindow w, JsonElement el, IMessageSerializer serializer, string endpoint, object state)
         {
             var obj = serializer.Deserialize<T>(el, endpoint);
-            var handler = (Func<T, Task>)state;
-            return handler(obj);
+            var handler = (Func<PhotinoWindow, T, Task>)state;
+            return handler(w, obj);
         }
     }
 
@@ -111,7 +111,7 @@ internal sealed class Messenger : IMessenger
 
     #region OnTask
 
-    public IMessenger OnTask(string endpoint, Action<JsonElement> handler)
+    public IMessenger OnTask(string endpoint, Action<PhotinoWindow, JsonElement> handler)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
         ArgumentNullException.ThrowIfNull(handler);
@@ -119,22 +119,22 @@ internal sealed class Messenger : IMessenger
         return this;
     }
 
-    public IMessenger OnTask<T>(string endpoint, Action<T> handler)
+    public IMessenger OnTask<T>(string endpoint, Action<PhotinoWindow, T> handler)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
         ArgumentNullException.ThrowIfNull(handler);
         _tasks[endpoint] = new TaskHandler(HandlerType.StaticHandler, StaticHandler: Handle, State: handler);
         return this;
 
-        static void Handle(JsonElement el, IMessageSerializer serializer, string endpoint, object state)
+        static void Handle(PhotinoWindow w, JsonElement el, IMessageSerializer serializer, string endpoint, object state)
         {
             var obj = serializer.Deserialize<T>(el, endpoint);
-            var handler = (Action<T>)state;
-            handler(obj);
+            var handler = (Action<PhotinoWindow, T>)state;
+            handler(w, obj);
         }
     }
 
-    public IMessenger OnTaskAsync(string endpoint, Func<JsonElement, Task> handler)
+    public IMessenger OnTaskAsync(string endpoint, Func<PhotinoWindow, JsonElement, Task> handler)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
         ArgumentNullException.ThrowIfNull(handler);
@@ -142,18 +142,18 @@ internal sealed class Messenger : IMessenger
         return this;
     }
 
-    public IMessenger OnTaskAsync<T>(string endpoint, Func<T, Task> handler)
+    public IMessenger OnTaskAsync<T>(string endpoint, Func<PhotinoWindow, T, Task> handler)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
         ArgumentNullException.ThrowIfNull(handler);
         _tasks[endpoint] = new TaskHandler(HandlerType.StaticAsyncHandler, StaticAsyncHandler: Handle, State: handler);
         return this;
 
-        static Task Handle(JsonElement el, IMessageSerializer serializer, string endpoint, object state)
+        static Task Handle(PhotinoWindow w, JsonElement el, IMessageSerializer serializer, string endpoint, object state)
         {
             var obj = serializer.Deserialize<T>(el, endpoint);
-            var handler = (Func<T, Task>)state;
-            return handler(obj);
+            var handler = (Func<PhotinoWindow, T, Task>)state;
+            return handler(w, obj);
         }
     }
 
@@ -161,7 +161,7 @@ internal sealed class Messenger : IMessenger
 
     #region OnQuery
 
-    public IMessenger OnQuery(string endpoint, Func<JsonElement, object?> handler)
+    public IMessenger OnQuery(string endpoint, Func<PhotinoWindow, JsonElement, object?> handler)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
         ArgumentNullException.ThrowIfNull(handler);
@@ -169,22 +169,22 @@ internal sealed class Messenger : IMessenger
         return this;
     }
 
-    public IMessenger OnQuery<T>(string endpoint, Func<T, object?> handler)
+    public IMessenger OnQuery<T>(string endpoint, Func<PhotinoWindow, T, object?> handler)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
         ArgumentNullException.ThrowIfNull(handler);
         _queries[endpoint] = new QueryHandler(HandlerType.StaticHandler, StaticHandler: Handle, State: handler);
         return this;
 
-        static object? Handle(JsonElement el, IMessageSerializer serializer, string endpoint, object state)
+        static object? Handle(PhotinoWindow w, JsonElement el, IMessageSerializer serializer, string endpoint, object state)
         {
             var obj = serializer.Deserialize<T>(el, endpoint);
-            var handler = (Func<T, object?>)state;
-            return handler(obj);
+            var handler = (Func<PhotinoWindow, T, object?>)state;
+            return handler(w,obj);
         }
     }
 
-    public IMessenger OnQueryAsync(string endpoint, Func<JsonElement, Task<object?>> handler)
+    public IMessenger OnQueryAsync(string endpoint, Func<PhotinoWindow, JsonElement, Task<object?>> handler)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
         ArgumentNullException.ThrowIfNull(handler);
@@ -192,18 +192,18 @@ internal sealed class Messenger : IMessenger
         return this;
     }
 
-    public IMessenger OnQueryAsync<T>(string endpoint, Func<T, Task<object?>> handler)
+    public IMessenger OnQueryAsync<T>(string endpoint, Func<PhotinoWindow, T, Task<object?>> handler)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
         ArgumentNullException.ThrowIfNull(handler);
         _queries[endpoint] = new QueryHandler(HandlerType.StaticAsyncHandler, StaticAsyncHandler: Handle, State: handler);
         return this;
 
-        static Task<object?> Handle(JsonElement el, IMessageSerializer serializer, string endpoint, object state)
+        static Task<object?> Handle(PhotinoWindow w, JsonElement el, IMessageSerializer serializer, string endpoint, object state)
         {
             var obj = serializer.Deserialize<T>(el, endpoint);
-            var handler = (Func<T, Task<object?>>)state;
-            return handler(obj);
+            var handler = (Func<PhotinoWindow, T, Task<object?>>)state;
+            return handler(w, obj);
         }
     }
 
@@ -358,33 +358,35 @@ internal sealed class Messenger : IMessenger
             if (endpoint == null) return;
 
             reqId = msg!.RequestId;
-            if (string.IsNullOrEmpty(reqId)) return;
+            if (string.IsNullOrEmpty(reqId) && msg.Type != MessageType.Message) return;
 
             if (msg.IsResponse)
             {
-                if (_pendingRequests.TryRemove(reqId, out var task))
+                if (reqId is null || !_pendingRequests.TryRemove(reqId, out var task))
                 {
-                    bool isSet = task.TrySetResult(msg!.Data);
-                    Debug.Assert(isSet, $"Can't set result for pending request \"{reqId}\"");
+                    return;
                 }
+
+                bool isSet = task.TrySetResult(msg!.Data);
+                Debug.Assert(isSet, $"Can't set result for pending request \"{reqId}\"");
                 return;
             }
 
             object? result;
             string? json;
-            switch (msg!.Type)
+            switch (msg.Type)
             {
                 case MessageType.Message:
-                    await HandleMessageAsync(endpoint, msg.Data).ConfigureAwait(false);
+                    await HandleMessageAsync(endpoint, window, msg.Data).ConfigureAwait(false);
                     break;
                 case MessageType.Task:
-                    await ExecuteTask(endpoint, msg.Data).ConfigureAwait(false);
+                    await ExecuteTask(endpoint, window, msg.Data).ConfigureAwait(false);
                     result = StatusCode.OK;
                     json = _serializer.Serialize(new { requestId = reqId, data = result });
                     window.SendWebMessage(json);
                     break;
                 case MessageType.Query:
-                    result = await ExecuteQuery(endpoint, msg.Data).ConfigureAwait(false);
+                    result = await ExecuteQuery(endpoint, window, msg.Data).ConfigureAwait(false);
                     json = _serializer.Serialize(new { requestId = reqId, data = result });
                     window.SendWebMessage(json);
                     break;
@@ -402,7 +404,7 @@ internal sealed class Messenger : IMessenger
         }
     }
 
-    private Task HandleMessageAsync(string endpoint, JsonElement data)
+    private Task HandleMessageAsync(string endpoint, PhotinoWindow window, JsonElement data)
     {
         if (!_messages.TryGetValue(endpoint, out var handler))
         {
@@ -414,25 +416,25 @@ internal sealed class Messenger : IMessenger
         switch (handler.HandlerType)
         {
             case HandlerType.Handler:
-                handler.Handler!(data);
+                handler.Handler!(window, data);
                 return Task.CompletedTask;
 
             case HandlerType.StaticHandler:
-                handler.StaticHandler!(data, _serializer, endpoint, handler.State!);
+                handler.StaticHandler!(window, data, _serializer, endpoint, handler.State!);
                 return Task.CompletedTask;
 
             case HandlerType.AsyncHandler:
-                return handler.AsyncHandler!(data);
+                return handler.AsyncHandler!(window, data);
 
             case HandlerType.StaticAsyncHandler:
-                return handler.StaticAsyncHandler!(data, _serializer, endpoint, handler.State!);
+                return handler.StaticAsyncHandler!(window, data, _serializer, endpoint, handler.State!);
 
             default:
                 throw new InvalidOperationException($"Unsupported handler type: {handler.HandlerType}");
         }
     }
 
-    private Task ExecuteTask(string endpoint, JsonElement data)
+    private Task ExecuteTask(string endpoint, PhotinoWindow window, JsonElement data)
     {
         if (!_tasks.TryGetValue(endpoint, out var handler))
         {
@@ -444,25 +446,25 @@ internal sealed class Messenger : IMessenger
         switch (handler.HandlerType)
         {
             case HandlerType.Handler:
-                handler.Handler!(data);
+                handler.Handler!(window, data);
                 return Task.CompletedTask;
 
             case HandlerType.StaticHandler:
-                handler.StaticHandler!(data, _serializer, endpoint, handler.State!);
+                handler.StaticHandler!(window, data, _serializer, endpoint, handler.State!);
                 return Task.CompletedTask;
 
             case HandlerType.AsyncHandler:
-                return handler.AsyncHandler!(data);
+                return handler.AsyncHandler!(window, data);
 
             case HandlerType.StaticAsyncHandler:
-                return handler.StaticAsyncHandler!(data, _serializer, endpoint, handler.State!);
+                return handler.StaticAsyncHandler!(window, data, _serializer, endpoint, handler.State!);
 
             default:
                 throw new InvalidOperationException($"Unsupported handler type: {handler.HandlerType}");
         }
     }
 
-    private Task<object?> ExecuteQuery(string endpoint, JsonElement data)
+    private Task<object?> ExecuteQuery(string endpoint, PhotinoWindow window, JsonElement data)
     {
         if (!_queries.TryGetValue(endpoint, out var handler))
         {
@@ -473,10 +475,10 @@ internal sealed class Messenger : IMessenger
 
         return handler.HandlerType switch
         {
-            HandlerType.Handler => Task.FromResult(handler.Handler!(data)),
-            HandlerType.StaticHandler => Task.FromResult(handler.StaticHandler!(data, _serializer, endpoint, handler.State!)),
-            HandlerType.AsyncHandler => handler.AsyncHandler!(data),
-            HandlerType.StaticAsyncHandler => handler.StaticAsyncHandler!(data, _serializer, endpoint, handler.State!),
+            HandlerType.Handler => Task.FromResult(handler.Handler!(window, data)),
+            HandlerType.StaticHandler => Task.FromResult(handler.StaticHandler!(window, data, _serializer, endpoint, handler.State!)),
+            HandlerType.AsyncHandler => handler.AsyncHandler!(window, data),
+            HandlerType.StaticAsyncHandler => handler.StaticAsyncHandler!(window, data, _serializer, endpoint, handler.State!),
             _ => throw new InvalidOperationException($"Unsupported handler type: {handler.HandlerType}")
         };
     }

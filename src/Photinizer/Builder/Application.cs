@@ -55,6 +55,8 @@ public class Application : IPhotinizerConfiguration
     /// </summary>
     public ILogger Logger { get; }
 
+    public PhotinizerConfiguration PhotinizerConfiguration => Services.GetRequiredService<IOptions<PhotinizerConfiguration>>().Value;
+
     public bool IsRunning => Volatile.Read(ref _isRunning) == 1;
 
     public PhotinoWindow MainWindow
@@ -71,16 +73,7 @@ public class Application : IPhotinizerConfiguration
         return this;
     }
 
-    private string ResolveSourcePath(string source)
-    {
-        var webRoot = Configuration[ConfigurationDefaults.WebRootKey];
-        if (!string.IsNullOrWhiteSpace((webRoot)))
-        {
-            return Path.Combine(webRoot, source);
-        }
 
-        return Path.Combine(Environment.ContentRootPath, "wwwroot", source);
-    }
 
     public void Run(Action<IPhotinizerConfiguration>? config = null)
     {
@@ -99,14 +92,11 @@ public class Application : IPhotinizerConfiguration
     private void RunApp(Action<IPhotinizerConfiguration>? setup = null)
     {
         MainWindow = new PhotinoWindow();
-        Messenger.RegisterWindow(MainWindow);
 
-        var configuration = Services.GetRequiredService<IOptions<PhotinizerConfiguration>>();
-
-        var settings = configuration.Value.ResolveMainWindowConfiguration();
+        var settings = PhotinizerConfiguration.ResolveMainWindowConfiguration();
         MainWindow.UseOwnSettings(settings);
 
-        var sourcePath = ResolveSourcePath(settings.Source);
+        var sourcePath = this.ResolveSourcePath(settings.Source);
         if (!File.Exists(sourcePath))
         {
             var msg = $"Could not find source file '{settings.Source}'";
@@ -118,6 +108,7 @@ public class Application : IPhotinizerConfiguration
         AfterStartCallback?.Invoke(this);
         setup?.Invoke(this);
 
+        Messenger.RegisterWindow(MainWindow);
         MainWindow.WaitForClose();
     }
 

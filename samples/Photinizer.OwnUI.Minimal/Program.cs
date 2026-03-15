@@ -15,7 +15,7 @@ builder.Logging.AddConsole();
 builder.Services.AddSampleServices();
 
 var app = builder.Build();
-app.MapQuery("Hello, backend!", _ => "Hello, frontend!");
+app.MapQuery("Hello, backend!", (_, _) => "Hello, frontend!");
 app.RunServicesAfterStart(() => cts.Token);
 app.Run();
 
@@ -29,7 +29,7 @@ Application
         .Services.AddSampleServices())
     .Run(config: o =>
     {
-        o.Messenger.OnQuery("Hello, backend!", _ => "Hello, frontend!");
+        o.Messenger.OnQuery("Hello, backend!", (_, _) => "Hello, frontend!");
         o.RunAllServicesAsync(cts.Token);
     });
 #endif

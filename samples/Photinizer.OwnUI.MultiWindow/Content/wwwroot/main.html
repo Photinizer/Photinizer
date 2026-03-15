@@ -4,28 +4,14 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Main Window</title>
+    <title>[[TITLE]]</title>
     <link rel="stylesheet" href="assets/main.css">
+    <script src="photinizer-messenger.js"></script>
+    <script src="photinizer-ui.js"></script>
+    <script src="{{NAME}}-photinizer-bundle.js" defer></script>
+    <script src="{{NAME}}-photinizer-init.js" defer></script>
 </head>
 <body>
-    <img class="logo center" src="assets/photino-logo-full.png">
-    <button class="primary random center">Open Random Window</button>
-    <button class="close center">Close Window</button>
-
-    <script>
-        (() => {
-            document.querySelector('.random')
-                .addEventListener('click', event => {
-                    window.external.sendMessage('random-window');
-                });
-
-            document.querySelector('.close')
-                .addEventListener('click', event => {
-                    window.external.sendMessage('close-window');
-                });
-
-            window.external.receiveMessage(message => alert(message));
-        })();
-    </script>
+    <div id="app"></div>
 </body>
 </html>

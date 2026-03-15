@@ -52,7 +52,7 @@ public readonly ref partial struct Bundler(PhotinizerConfiguration configuration
 
         var ph = new PlaceholderProvider(
             square: new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { { "TITLE", config.Title } },
-            curly:  new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { { "NAME", name } }
+            curly:  new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) { { "NAME", name.ToLower() } }
             );
 
         sb ??= new StringBuilder((int)(content.Length * 1.2));
