@@ -5,4 +5,8 @@
     <PhotinizerBundleOnPublish Condition="'$(PhotinizerBundleOnPublish)'==''">false</PhotinizerBundleOnPublish>
     <PhotinizerContentRootPath Condition="'$(PhotinizerContentRootPath)'==''">Frontend</PhotinizerContentRootPath>
   </PropertyGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Include="$(MSBuildProjectDirectory)\$(PhotinizerContentRootPath)\**\*" />
+  </ItemGroup>
 </Project>

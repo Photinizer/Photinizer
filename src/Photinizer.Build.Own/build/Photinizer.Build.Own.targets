@@ -16,9 +16,16 @@
            Text="Photinizer.Cli not found at: $(_PhotinizerCliToRun)" />
   </Target>
 
+  <!-- Enumerate project-side inputs for incremental build -->
+  <ItemGroup Condition="'$(DesignTimeBuild)'!='true'">
+    <_PhotinizerInputs Include="$(MSBuildProjectDirectory)\$(PhotinizerContentRootPath)\**\*" />
+  </ItemGroup>
+
   <!-- Build -->
   <Target Name="Photinizer_Bundle_OnBuild"
           AfterTargets="CopyFilesToOutputDirectory"
+          Inputs="@(_PhotinizerInputs)"
+          Outputs="$(IntermediateOutputPath)photinizer.bundle.stamp"
           Condition="
           '$(PhotinizerEnableBundler)'=='true' and
           '$(PhotinizerBundleOnBuild)'=='true' and
@@ -57,11 +64,18 @@
           WorkingDirectory="$(MSBuildProjectDirectory)"
           StandardOutputImportance="High"
           StandardErrorImportance="High" />
+
+    <!-- Touch the stamp so incremental build works -->
+    <WriteLinesToFile File="$(IntermediateOutputPath)photinizer.bundle.stamp"
+                      Lines="$(MSBuildProjectFullPath);$([System.DateTime]::Now.ToBinary())"
+                      Overwrite="true" />
   </Target>
 
   <!-- Publish -->
   <Target Name="Photinizer_Bundle_OnPublish"
           AfterTargets="CopyFilesToPublishDirectory"
+          Inputs="@(_PhotinizerInputs)"
+          Outputs="$(IntermediateOutputPath)photinizer.publish.stamp"
           Condition="
           '$(PhotinizerEnableBundler)'=='true' and
           '$(PhotinizerBundleOnPublish)'=='true' and
@@ -100,6 +114,11 @@
           WorkingDirectory="$(MSBuildProjectDirectory)"
           StandardOutputImportance="High"
           StandardErrorImportance="High" />
+
+    <!-- touch stamp for incremental publish -->
+    <WriteLinesToFile File="$(IntermediateOutputPath)photinizer.publish.stamp"
+                      Lines="$(MSBuildProjectFullPath);$([System.DateTime]::Now.ToBinary())"
+                      Overwrite="true" />
   </Target>
 
 </Project>
