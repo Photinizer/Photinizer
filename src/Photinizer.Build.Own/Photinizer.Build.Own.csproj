@@ -12,6 +12,8 @@
     <None Include="build\Photinizer.Build.Own.props" Pack="true" PackagePath="build\" />
     <None Include="build\Photinizer.Build.Own.targets" Pack="true" PackagePath="build\" />
     <None Include="Frontend\**\*.js" Pack="true" PackagePath="Frontend" />
+    <None Update="Frontend\wwwroot\photinizer-bundle.js" Pack="false" />
+    <None Update="Frontend\wwwroot\photinizer-init.js"  Pack="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,14 +23,14 @@
     </PackageReference>
   </ItemGroup>
 
-  <Target Name="Photinizer_AddLibRefPlaceholders" BeforeTargets="GenerateNuspec">
+  <Target Name="Photinizer_AddLibPlaceholders" BeforeTargets="GenerateNuspec">
     <WriteLinesToFile File="$(BaseIntermediateOutputPath)_._" Lines="" Overwrite="true" />
   </Target>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(DesignTimeBuild)'!='true'">
     <None Include="$(BaseIntermediateOutputPath)_._"
           Condition="Exists('$(BaseIntermediateOutputPath)_._')"
-          Pack="true" PackagePath="lib/net8.0/_._" Visible="false" />
+          Pack="true" PackagePath="lib/$(TargetFramework)/_._" Visible="false" />
   </ItemGroup>
 
 </Project>

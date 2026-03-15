@@ -103,7 +103,7 @@ public class Application : IPhotinizerConfiguration
 
         var configuration = Services.GetRequiredService<IOptions<PhotinizerConfiguration>>();
 
-        var settings = configuration.Value.Windows["MainWindow"];
+        var settings = configuration.Value.ResolveMainWindowConfiguration();
         MainWindow.UseOwnSettings(settings);
 
         var sourcePath = ResolveSourcePath(settings.Source);

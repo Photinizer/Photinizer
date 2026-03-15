@@ -1,7 +1,7 @@
 ﻿using System.CommandLine;
 using System.Text.Json;
-using Photinizer.Cli;
 using Photinizer.Cli.Properties;
+using Photinizer.Cli.Services;
 using Photinizer.Settings;
 
 const string CliName = "Photinizer.Cli";
@@ -56,8 +56,7 @@ rootCommand.SetAction(parseResult =>
     var config = LoadPhotinizer(File.ReadAllText(appsettings));
 
     var bundler = new Bundler(config, cliAlias, sourceDir, outputDir);
-    bundler.BuildTemplates();
-    bundler.CreateBundleFile();
+    bundler.Build();
 
     Console.Out.Flush();
 

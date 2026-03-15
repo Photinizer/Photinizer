@@ -11,9 +11,5 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <Copyright>Copyright (c) $(Authors) $([System.DateTime]::Today.ToString(yyyy))</Copyright>
   </PropertyGroup>
-  
-  <!-- Enable Build packages -->
-  <PropertyGroup>
-    <UseBuildPackages>false</UseBuildPackages>
-  </PropertyGroup>
+
 </Project>
