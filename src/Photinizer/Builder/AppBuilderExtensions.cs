@@ -1,14 +1,13 @@
 ﻿using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Photinizer.Builder
+namespace Photinizer.Builder;
+
+public static class AppBuilderExtensions
 {
-    public static class AppBuilderExtensions
+    public static IAppBuilder UseApp<TApp>(this IAppBuilder builder) where TApp : Application
     {
-        public static IAppBuilder UseApp<TApp>(this IAppBuilder builder) where TApp : Application
-        {
-            ArgumentNullException.ThrowIfNull(builder);
-            builder.Services.TryAddSingleton<Application, TApp>();
-            return builder;
-        }
+        ArgumentNullException.ThrowIfNull(builder);
+        builder.Services.TryAddSingleton<Application, TApp>();
+        return builder;
     }
 }

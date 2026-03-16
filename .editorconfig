@@ -48,10 +48,16 @@ dotnet_style_qualification_for_property = false:suggestion
 dotnet_style_qualification_for_method = false:suggestion
 dotnet_style_qualification_for_event = false:suggestion
 
-# Types: use keywords instead of BCL types, and permit var only when the type is clear
-csharp_style_var_for_built_in_types = false:none
-#csharp_style_var_when_type_is_apparent = false:none
-#csharp_style_var_elsewhere = false:suggestion
+# only use var when it's obvious what the variable type is
+csharp_style_var_for_built_in_types = true:none
+csharp_style_var_when_type_is_apparent = true:none
+csharp_style_var_elsewhere = false:none
+
+# Namespace preference (prefer file-scoped namespaces)
+csharp_style_namespace_declarations = file_scoped
+dotnet_diagnostic.IDE0161.severity = suggestion
+
+# use language keywords instead of BCL types
 dotnet_style_predefined_type_for_locals_parameters_members = true:suggestion
 dotnet_style_predefined_type_for_member_access = true:suggestion
 
@@ -87,7 +93,7 @@ dotnet_naming_style.camel_case_underscore_style.capitalization = camel_case
 # Code style defaults
 csharp_using_directive_placement = outside_namespace:suggestion
 dotnet_sort_system_directives_first = true
-csharp_prefer_braces = true:silent
+csharp_prefer_braces = true:none
 csharp_preserve_single_line_blocks = true:none
 csharp_preserve_single_line_statements = false:none
 csharp_prefer_static_local_function = true:suggestion
@@ -101,7 +107,7 @@ dotnet_style_collection_initializer = true:suggestion
 dotnet_style_prefer_collection_expression = when_types_exactly_match
 dotnet_style_explicit_tuple_names = true:suggestion
 dotnet_style_coalesce_expression = true:suggestion
-dotnet_style_null_propagation = true
+dotnet_style_null_propagation = true:suggestion
 dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggestion
 dotnet_style_prefer_inferred_tuple_names = true:suggestion
 dotnet_style_prefer_inferred_anonymous_type_member_names = true:suggestion
@@ -140,9 +146,6 @@ dotnet_diagnostic.IDE0071.severity = silent
 # IDE0031: Use null propagation - keep as silent hint to avoid build errors with TreatWarningsAsErrors
 dotnet_diagnostic.IDE0031.severity = silent
 
-#CA1806: Do not ignore method results
-dotnet_diagnostic.CA1806.severity = none
-
 # Space preferences
 csharp_space_after_cast = false
 csharp_space_after_colon_in_inheritance_clause = true
@@ -167,16 +170,13 @@ csharp_space_between_method_declaration_parameter_list_parentheses = false
 csharp_space_between_parentheses = false
 csharp_space_between_square_brackets = false
 
-# License header
-# file_header_template = Licensed to the .NET Foundation under one or more agreements.\nThe .NET Foundation licenses this file to you under the MIT license.
-
 # C++ Files
 [*.{cpp,h,in}]
 curly_bracket_next_line = true
 indent_brace_style = Allman
 
 # Xml project files
-[*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,nativeproj,locproj}]
+[*.{csproj,vcxproj,vcxproj.filters,proj,nativeproj,locproj}]
 indent_size = 2
 
 # Xml build files
@@ -185,6 +185,10 @@ indent_size = 2
 
 # Xml files
 [*.{resx,ruleset,slnx,stylecop,xml}]
+indent_size = 2
+
+# Xaml files
+[*.{xaml}]
 indent_size = 2
 
 # Xml resource files
