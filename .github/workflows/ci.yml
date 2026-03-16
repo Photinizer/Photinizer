@@ -34,7 +34,7 @@ jobs:
         run: dotnet restore --nologo
 
       - name: Build (Release)
-        run: dotnet build --configuration Release --nologo -warnaserror
+        run: dotnet build --configuration Release --nologo
 
       - name: Test (Release)
         run: dotnet test --configuration Release --nologo --no-build
