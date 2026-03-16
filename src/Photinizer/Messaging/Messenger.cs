@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Photinizer.Builder;
+using Photinizer.Utilities;
 using Photino.NET;
 
 namespace Photinizer.Messaging;
@@ -23,27 +24,14 @@ internal sealed class Messenger : IMessenger
         _serializer = serializer;
     }
 
-    internal static int NewId
-    {
-        get
-        {
-            int newId;
-            do
-            {
-                newId = Interlocked.Increment(ref field);
-            } while (newId == 0);
-            return newId;
-        }
-    }
-
     public void RegisterWindow(PhotinoWindow window)
     {
         ArgumentNullException.ThrowIfNull(window);
-
-        while (!_windows.TryAdd(NewId, window))
+        int id;
+        do
         {
-        }
-
+            id = IdGenerator<PhotinoWindow>.NewId;
+        } while (!_windows.TryAdd(id, window));
         window.RegisterWebMessageReceivedHandler(OnMessageReceived);
     }
 

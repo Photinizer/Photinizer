@@ -73,8 +73,6 @@ public class Application : IPhotinizerConfiguration
         return this;
     }
 
-
-
     public void Run(Action<IPhotinizerConfiguration>? config = null)
     {
         if (Interlocked.CompareExchange(ref _isRunning, 1, 0) == 1) { Console.WriteLine("Already running"); return; }
