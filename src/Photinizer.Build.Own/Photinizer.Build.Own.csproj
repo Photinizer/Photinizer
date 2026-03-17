@@ -33,8 +33,9 @@
   </ItemGroup>
 
   <Target Name="_AddPlaceholderFileToPackage">
+    <WriteLinesToFile File="$(IntermediateOutputPath)_._" Lines="" Overwrite="true" />
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(MSBuildThisFileDirectory)_._" PackagePath="lib/$(TargetFramework)" />
+      <TfmSpecificPackageFile Include="$(IntermediateOutputPath)_._" PackagePath="lib/$(TargetFramework)" />
     </ItemGroup>
   </Target>
 
