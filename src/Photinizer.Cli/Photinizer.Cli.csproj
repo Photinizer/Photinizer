@@ -12,6 +12,8 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>logo.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,10 +29,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="$(OutputPath)Photinizer.Cli.dll" Condition="Exists('$(OutputPath)Photinizer.Cli.dll')" Pack="true" PackagePath="tools/$(TargetFramework)/any" Visible="false" />
-    <None Include="$(OutputPath)Photinizer.Cli.runtimeconfig.json" Condition="Exists('$(OutputPath)Photinizer.Cli.runtimeconfig.json')" Pack="true" PackagePath="tools/$(TargetFramework)/any" Visible="false" />
-    <None Include="$(OutputPath)Photinizer.Cli.deps.json" Condition="Exists('$(OutputPath)Photinizer.Cli.deps.json')" Pack="true" PackagePath="tools/$(TargetFramework)/any" Visible="false" />
-    <None Include="$(OutputPath)*.dll" Exclude="$(OutputPath)Photinizer.Cli.dll" Pack="true" PackagePath="tools/$(TargetFramework)/any" Visible="false" />
+    <None Include="$(OutputPath)Photinizer.Cli.dll" Condition="Exists('$(OutputPath)Photinizer.Cli.dll')" Pack="true" PackagePath="tools/$(TargetFramework)/any" />
+    <None Include="$(OutputPath)Photinizer.Cli.runtimeconfig.json" Condition="Exists('$(OutputPath)Photinizer.Cli.runtimeconfig.json')" Pack="true" PackagePath="tools/$(TargetFramework)/any" />
+    <None Include="$(OutputPath)Photinizer.Cli.deps.json" Condition="Exists('$(OutputPath)Photinizer.Cli.deps.json')" Pack="true" PackagePath="tools/$(TargetFramework)/any" />
+    <None Include="$(OutputPath)*.dll" Exclude="$(OutputPath)Photinizer.Cli.dll" Pack="true" PackagePath="tools/$(TargetFramework)/any" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\assets\logo.png" Pack="true" PackagePath="\" />
+    <None Include=".\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>
