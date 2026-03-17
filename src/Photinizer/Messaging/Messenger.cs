@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Text.Json;
 using Photinizer.Builder;
+using Photinizer.Exceptions;
+using Photinizer.Messaging.Dtos;
 using Photinizer.Utilities;
 using Photino.NET;
 
@@ -200,51 +202,45 @@ internal sealed class Messenger : IMessenger
     public static StatusCode NoAnswer() => StatusCode.NO_ANSWER;
     public static StatusCode Ok() => StatusCode.OK;
 
-    public void SendMessage(string endpoint, object data)
+    public void SendMessage(string endpoint, object parameters)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
 
-        foreach (var pair in _windows)
+        foreach (var (_, window) in _windows)
         {
-            var reqId = Guid.NewGuid().ToString();
-            var json = _serializer.Serialize(new { endpoint, requestId = reqId, data });
-            var window = pair.Value;
-            window.SendWebMessage(json);
+            SendRequestInternal(window, new(MessageTypes.Message, endpoint, parameters));
         }
     }
 
-    public Task SendTask(string endpoint, object data, CancellationToken cancellationToken = default)
+    public Task SendTask(string endpoint, object parameters, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
 
         if (cancellationToken.IsCancellationRequested) return Task.FromCanceled(cancellationToken);
 
         List<Task>? tasks = null;
-        foreach (var pair in _windows)
+        foreach (var (_, window) in _windows)
         {
             if (cancellationToken.IsCancellationRequested)
             {
                 (tasks ??= []).Add(Task.FromCanceled(cancellationToken));
                 continue;
             }
-
-            var reqId = Guid.NewGuid().ToString();
+            var request = new RequestDto(MessageTypes.Task, endpoint, parameters);
 
             var tcs = new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);
             var task = tcs.Task;
 
             if (cancellationToken.CanBeCanceled)
             {
-                var registration = cancellationToken.UnsafeRegister(RegisterCallback, (this, tcs, reqId));
+                var registration = cancellationToken.UnsafeRegister(RegisterCallback, (this, tcs, request.Id));
                 task.ContinueWith(_ => registration.Dispose(), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             }
 
             (tasks ??= []).Add(task);
-            _pendingRequests[reqId] = tcs;
+            _pendingRequests[request.Id] = tcs;
 
-            var json = _serializer.Serialize(new { endpoint, requestId = reqId, data });
-            var window = pair.Value;
-            window.SendWebMessage(json);
+            SendRequestInternal(window, request);
         }
 
         if (tasks is not null)
@@ -272,38 +268,35 @@ internal sealed class Messenger : IMessenger
         }
     }
 
-    public Task<JsonElement[]> SendQuery(string endpoint, object data, CancellationToken cancellationToken = default)
+    public Task<JsonElement[]> SendQuery(string endpoint, object parameters, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
 
         if (cancellationToken.IsCancellationRequested) return Task.FromCanceled<JsonElement[]>(cancellationToken);
 
         List<Task<JsonElement>>? tasks = null;
-        foreach (var pair in _windows)
+        foreach (var (_, window) in _windows)
         {
             if (cancellationToken.IsCancellationRequested)
             {
                 (tasks ??= []).Add(Task.FromCanceled<JsonElement>(cancellationToken));
                 continue;
             }
-
-            var reqId = Guid.NewGuid().ToString();
+            var request = new RequestDto(MessageTypes.Query, endpoint, parameters);
 
             var tcs = new TaskCompletionSource<JsonElement>(TaskCreationOptions.RunContinuationsAsynchronously);
             var task = tcs.Task;
 
             if (cancellationToken.CanBeCanceled)
             {
-                var registration = cancellationToken.UnsafeRegister(RegisterCallback, (this, tcs, reqId));
+                var registration = cancellationToken.UnsafeRegister(RegisterCallback, (this, tcs, request.Id));
                 task.ContinueWith(_ => registration.Dispose(), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             }
 
             (tasks ??= []).Add(tcs.Task);
-            _pendingRequests[reqId] = tcs;
+            _pendingRequests[request.Id] = tcs;
 
-            var json = _serializer.Serialize(new { endpoint, requestId = reqId, data });
-            var window = pair.Value;
-            window.SendWebMessage(json);
+            SendRequestInternal(window, request);
         }
 
         if (tasks is not null)
@@ -337,66 +330,66 @@ internal sealed class Messenger : IMessenger
 
         window.Log($".OnMessageReceived({message})");
 
-        string? reqId = null;
         try
         {
-            var msg = _serializer.Deserialize(message, MessageJsonContext.Default.MessageBase);
-
-            var endpoint = msg?.Endpoint;
-            if (endpoint == null) return;
-
-            reqId = msg!.RequestId;
-            if (string.IsNullOrEmpty(reqId) && msg.Type != MessageType.Message) return;
-
-            if (msg.IsResponse)
-            {
-                if (reqId is null || !_pendingRequests.TryRemove(reqId, out var task))
-                {
-                    return;
-                }
-
-                bool isSet = task.TrySetResult(msg!.Data);
-                Debug.Assert(isSet, $"Can't set result for pending request \"{reqId}\"");
-                return;
-            }
-
-            object? result;
-            string? json;
-            switch (msg.Type)
-            {
-                case MessageType.Message:
-                    await HandleMessageAsync(endpoint, window, msg.Data).ConfigureAwait(false);
-                    break;
-                case MessageType.Task:
-                    await ExecuteTask(endpoint, window, msg.Data).ConfigureAwait(false);
-                    result = StatusCode.OK;
-                    json = _serializer.Serialize(new { requestId = reqId, data = result });
-                    window.SendWebMessage(json);
-                    break;
-                case MessageType.Query:
-                    result = await ExecuteQuery(endpoint, window, msg.Data).ConfigureAwait(false);
-                    json = _serializer.Serialize(new { requestId = reqId, data = result });
-                    window.SendWebMessage(json);
-                    break;
-                default:
-                    throw new InvalidOperationException($"Unsupported message type: {msg.Type}");
-            }
+            var messageDto = _serializer.Deserialize(message, DtosJsonContext.Default.MessageDto);
+            if (messageDto.Request is not null)
+                await HandleRequest(window, messageDto.Request);
+            else if (messageDto.Response is not null)
+                HandleResponse(window, messageDto.Response);
+            else if (messageDto.Error is not null)
+                HandleError(window, messageDto.Error);
         }
         catch (Exception ex)
         {
-            if (!string.IsNullOrEmpty(reqId))
-            {
-                var json = _serializer.Serialize(new { requestId = reqId, error = ex.Message });
-                window.SendWebMessage(json);
-            }
+            SendErrorInternal(window, new() { Error = $"Cannot process message. Error: {ex.Message}; Message: {message}"});
+        }
+    }
+    private async Task HandleRequest(PhotinoWindow window, RequestDto request)
+    {
+        switch (request.Type)
+        {
+            case MessageTypes.Message:
+                await HandleMessageAsync(window, request).ConfigureAwait(false);
+                break;
+
+            case MessageTypes.Task:
+                await ExecuteTask(window, request).ConfigureAwait(false);
+                SendResponseInternal(window, ResponseDto.OK(request));
+                break;
+
+            case MessageTypes.Query:
+                var result = await ExecuteQuery(window, request).ConfigureAwait(false);
+                SendResponseInternal(window, ResponseDto.FromResult(request, result));
+                break;
+
+            default:
+                throw new InvalidOperationException($"Unsupported message type: {request.Type}");
         }
     }
 
-    private Task HandleMessageAsync(string endpoint, PhotinoWindow window, JsonElement data)
+    private void HandleResponse(PhotinoWindow window, ResponseDto response)
     {
-        if (!_messages.TryGetValue(endpoint, out var handler))
+        if (_pendingRequests.TryRemove(response.RequestId, out var task))
         {
-            var msg = $"Can't resolve message handler for endpoint: {endpoint}";
+            bool isSet = response.Error is not null
+                ? task.TrySetException(new PhotinizerException($"Task execution error: {response.Error?.ToString() ?? "unknown"})"))
+                : task.TrySetResult(response.Result!.Value);
+
+            Debug.Assert(isSet, $"Can't set result for pending request \"{response.RequestId}\"");
+        }
+    }
+
+    private void HandleError(PhotinoWindow window, ErrorNotificationDto error)
+        => throw new PhotinizerException($"Frontend error: {error.Error}");
+
+
+
+    private Task HandleMessageAsync(PhotinoWindow window, RequestDto request)
+    {
+        if (!_messages.TryGetValue(request.Endpoint, out var handler))
+        {
+            var msg = $"Can't resolve message handler for endpoint: {request.Endpoint}";
             Debug.Fail(msg);
             throw new InvalidOperationException(msg);
         }
@@ -404,29 +397,29 @@ internal sealed class Messenger : IMessenger
         switch (handler.HandlerType)
         {
             case HandlerType.Handler:
-                handler.Handler!(window, data);
+                handler.Handler!(window, request.Parameters);
                 return Task.CompletedTask;
 
             case HandlerType.StaticHandler:
-                handler.StaticHandler!(window, data, _serializer, endpoint, handler.State!);
+                handler.StaticHandler!(window, request.Parameters, _serializer, request.Endpoint, handler.State!);
                 return Task.CompletedTask;
 
             case HandlerType.AsyncHandler:
-                return handler.AsyncHandler!(window, data);
+                return handler.AsyncHandler!(window, request.Parameters);
 
             case HandlerType.StaticAsyncHandler:
-                return handler.StaticAsyncHandler!(window, data, _serializer, endpoint, handler.State!);
+                return handler.StaticAsyncHandler!(window, request.Parameters, _serializer, request.Endpoint, handler.State!);
 
             default:
                 throw new InvalidOperationException($"Unsupported handler type: {handler.HandlerType}");
         }
     }
 
-    private Task ExecuteTask(string endpoint, PhotinoWindow window, JsonElement data)
+    private Task ExecuteTask(PhotinoWindow window, RequestDto request)
     {
-        if (!_tasks.TryGetValue(endpoint, out var handler))
+        if (!_tasks.TryGetValue(request.Endpoint, out var handler))
         {
-            var msg = $"Can't resolve task handler for endpoint: {endpoint}";
+            var msg = $"Can't resolve task handler for endpoint: {request.Endpoint}";
             Debug.Fail(msg);
             throw new InvalidOperationException(msg);
         }
@@ -434,40 +427,53 @@ internal sealed class Messenger : IMessenger
         switch (handler.HandlerType)
         {
             case HandlerType.Handler:
-                handler.Handler!(window, data);
+                handler.Handler!(window, request.Parameters);
                 return Task.CompletedTask;
 
             case HandlerType.StaticHandler:
-                handler.StaticHandler!(window, data, _serializer, endpoint, handler.State!);
+                handler.StaticHandler!(window, request.Parameters, _serializer, request.Endpoint, handler.State!);
                 return Task.CompletedTask;
 
             case HandlerType.AsyncHandler:
-                return handler.AsyncHandler!(window, data);
+                return handler.AsyncHandler!(window, request.Parameters);
 
             case HandlerType.StaticAsyncHandler:
-                return handler.StaticAsyncHandler!(window, data, _serializer, endpoint, handler.State!);
+                return handler.StaticAsyncHandler!(window, request.Parameters, _serializer, request.Endpoint, handler.State!);
 
             default:
                 throw new InvalidOperationException($"Unsupported handler type: {handler.HandlerType}");
         }
     }
 
-    private Task<object?> ExecuteQuery(string endpoint, PhotinoWindow window, JsonElement data)
+    private Task<object?> ExecuteQuery(PhotinoWindow window, RequestDto request)
     {
-        if (!_queries.TryGetValue(endpoint, out var handler))
+        if (!_queries.TryGetValue(request.Endpoint, out var handler))
         {
-            var msg = $"Can't resolve query handler for endpoint: {endpoint}";
+            var msg = $"Can't resolve query handler for endpoint: {request.Endpoint}";
             Debug.Fail(msg);
             throw new InvalidOperationException(msg);
         }
 
         return handler.HandlerType switch
         {
-            HandlerType.Handler => Task.FromResult(handler.Handler!(window, data)),
-            HandlerType.StaticHandler => Task.FromResult(handler.StaticHandler!(window, data, _serializer, endpoint, handler.State!)),
-            HandlerType.AsyncHandler => handler.AsyncHandler!(window, data),
-            HandlerType.StaticAsyncHandler => handler.StaticAsyncHandler!(window, data, _serializer, endpoint, handler.State!),
+            // TODO: maybe handlers be like Task<Window, Request, object/response> ..
+            HandlerType.Handler => Task.FromResult(handler.Handler!(window, request.Parameters)),
+            HandlerType.StaticHandler => Task.FromResult(handler.StaticHandler!(window, request.Parameters, _serializer, request.Endpoint, handler.State!)),
+            HandlerType.AsyncHandler => handler.AsyncHandler!(window, request.Parameters),
+            HandlerType.StaticAsyncHandler => handler.StaticAsyncHandler!(window, request.Parameters, _serializer, request.Endpoint, handler.State!),
             _ => throw new InvalidOperationException($"Unsupported handler type: {handler.HandlerType}")
         };
     }
+
+    private void SendRequestInternal(PhotinoWindow window, RequestDto request) =>
+    SendPackage(window, new { request });
+
+    private void SendResponseInternal(PhotinoWindow window, ResponseDto response) =>
+        SendPackage(window, new { response });
+
+    private void SendErrorInternal(PhotinoWindow window, ErrorNotificationDto error) =>
+        SendPackage(window, new { error });
+
+    private void SendPackage(PhotinoWindow window, object package) =>
+        window.SendWebMessage(_serializer.Serialize(package));
 }
