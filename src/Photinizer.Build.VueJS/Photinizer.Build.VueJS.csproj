@@ -6,6 +6,10 @@
     <Nullable>enable</Nullable>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IncludeSymbols>false</IncludeSymbols>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddPlaceholderFileToPackage</TargetsForTfmSpecificContentInPackage>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>logo.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,14 +25,16 @@
     </PackageReference>
   </ItemGroup>
 
-  <Target Name="Photinizer_AddLibPlaceholders" BeforeTargets="GenerateNuspec">
-    <WriteLinesToFile File="$(BaseIntermediateOutputPath)_._" Lines="" Overwrite="true" />
-  </Target>
-
-  <ItemGroup Condition="'$(DesignTimeBuild)'!='true'">
-    <None Include="$(BaseIntermediateOutputPath)_._"
-          Condition="Exists('$(BaseIntermediateOutputPath)_._')"
-          Pack="true" PackagePath="lib/$(TargetFramework)/_._" Visible="false" />
+  <ItemGroup>
+    <None Include="..\..\assets\logo.png" Pack="true" PackagePath="\" />
+    <None Include=".\README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
+
+  <Target Name="_AddPlaceholderFileToPackage">
+    <WriteLinesToFile File="$(IntermediateOutputPath)_._" Lines="" Overwrite="true" />
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(IntermediateOutputPath)_._" PackagePath="lib/$(TargetFramework)" />
+    </ItemGroup>
+  </Target>
 
 </Project>
